@@ -144,6 +144,10 @@ protected:
   // pluginlib
   pluginlib::ClassLoader<karto::ScanSolver> solver_loader_;
   boost::shared_ptr<karto::ScanSolver> solver_;
+
+  std_msgs::Header scan_header_;
+  bool p_pub_odometry_ = false;
+  ros::Publisher scanmatch_odom_pub_;
 };
 
 } // end namespace

@@ -11,11 +11,13 @@ odom_frame: odom
 map_frame: map
 base_frame: base_footprint
 scan_topic: /scan
-mode: mapping #localization
+# mode: mapping #localization
+mode: localization
 
 # if you'd like to start localizing on bringup in a map and pose
-#map_file_name: test_steve
-#map_start_pose: [5.0, 1.0, 0.0]
+map_file_name: /home/yanwei/turtlebot_ws/src/slam_toolbox_map
+# map_start_pose: [5.0, 1.0, 0.0]
+map_start_pose: [-3.0, 1.0, 0.000000]
 
 debug_logging: false
 throttle_scans: 1

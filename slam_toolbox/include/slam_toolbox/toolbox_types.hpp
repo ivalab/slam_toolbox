@@ -27,6 +27,7 @@
 #include "tf2_geometry_msgs/tf2_geometry_msgs.h"
 #include "sensor_msgs/LaserScan.h"
 #include "geometry_msgs/PoseWithCovarianceStamped.h"
+#include "nav_msgs/Odometry.h"
 #include "slam_toolbox/toolbox_msgs.hpp"
 #include "karto_sdk/Mapper.h"
 

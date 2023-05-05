@@ -141,6 +141,8 @@ void SlamToolbox::setParams(ros::NodeHandle& private_nh)
 
   smapper_->configure(private_nh);
   private_nh.setParam("paused_new_measurements", false);
+
+  private_nh.param("pub_odometry", p_pub_odometry_, false);
 }
 
 /*****************************************************************************/
@@ -160,6 +162,11 @@ void SlamToolbox::setROSInterfaces(ros::NodeHandle& node)
   scan_filter_ = std::make_unique<tf2_ros::MessageFilter<sensor_msgs::LaserScan> >(*scan_filter_sub_, *tf_, odom_frame_, 5, node);
   scan_filter_->registerCallback(boost::bind(&SlamToolbox::laserCallback, this, _1));
   pose_pub_ = node.advertise<geometry_msgs::PoseWithCovarianceStamped>("pose", 10, true);
+
+  if(p_pub_odometry_)
+  {
+    scanmatch_odom_pub_ = node.advertise<nav_msgs::Odometry>("/scanmatch_odom", 50);
+  }
 }
 
 /*****************************************************************************/
@@ -176,12 +183,31 @@ void SlamToolbox::publishTransformLoop(const double& transform_publish_period)
   {
     {
       boost::mutex::scoped_lock lock(map_to_odom_mutex_);
-      geometry_msgs::TransformStamped msg;
-      tf2::convert(map_to_odom_, msg.transform);
-      msg.child_frame_id = odom_frame_;
-      msg.header.frame_id = map_frame_;
-      msg.header.stamp = ros::Time::now() + transform_timeout_;
-      tfB_->sendTransform(msg);
+      // Avoid publishing tf with initial 0.0 scan timestamp (see ros2 branch)
+      if (scan_header_.stamp.toSec() > 0.0 && !scan_header_.frame_id.empty()) {
+        geometry_msgs::TransformStamped msg;
+        tf2::convert(map_to_odom_, msg.transform);
+        msg.child_frame_id = odom_frame_;
+        msg.header.frame_id = map_frame_;
+        msg.header.stamp = scan_header_.stamp + transform_timeout_;
+        tfB_->sendTransform(msg);
+      }
+
+      // publish odometry
+      if (p_pub_odometry_ && tf_->canTransform(
+        map_frame_, base_frame_, ros::Time(0)))
+      {
+        const geometry_msgs::TransformStamped tmp = tf_->lookupTransform(
+          map_frame_, base_frame_, ros::Time(0));
+        nav_msgs::Odometry odo;
+        odo.header = tmp.header;
+        odo.child_frame_id = base_frame_;
+        odo.pose.pose.position.x = tmp.transform.translation.x;
+        odo.pose.pose.position.y = tmp.transform.translation.y;
+        odo.pose.pose.position.z = tmp.transform.translation.z;
+        odo.pose.pose.orientation = tmp.transform.rotation;
+        scanmatch_odom_pub_.publish(odo);
+      }
     }
     r.sleep();
   }

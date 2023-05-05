@@ -78,6 +78,9 @@ void SynchronousSlamToolbox::laserCallback(
   const sensor_msgs::LaserScan::ConstPtr& scan)
 /*****************************************************************************/
 {
+  // store scan header
+  scan_header_ = scan->header;
+
   // no odom info
   karto::Pose2 pose;
   if(!pose_helper_->getOdomPose(pose, scan->header.stamp))
