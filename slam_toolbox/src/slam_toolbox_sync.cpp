@@ -98,8 +98,9 @@ void SynchronousSlamToolbox::laserCallback(
     return;
   }
 
+  // (@yanwei) Removed the check as the same check has been appiled later before the real processing.
   // if sync and valid, add to queue
-  if (shouldProcessScan(scan, pose))
+  // if (shouldProcessScan(scan, pose))
   {
     boost::mutex::scoped_lock lock(q_mutex_);
     q_.push(PosedScan(scan, pose));
