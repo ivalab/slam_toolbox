@@ -1,0 +1,30 @@
+<launch>
+
+  <arg name="vis" default="false"/>
+  <arg name="output_pose_topic" default="/scanmatch/pose"/>
+  <arg name="output_odometry_topic" default="/scanmatch/odom"/>
+  <!-- Uncomment the following block if using laser filter pkg. -->
+  <!-- <node pkg="laser_filters" type="scan_to_scan_filter_chain" name="laser_filter">
+    <rosparam command="load" file="$(find slam_toolbox)/config/hokuyo_filter_config.yaml" />
+  </node> -->
+
+  <!-- Add command 
+
+    "2> >(grep -v TF_REPEATED_DATA buffer_core)" 
+    
+    at the end of the launch command to avoid tf warnings, ref: https://answers.ros.org/question/377796/tf_repeated_data-ignoring-data-with-redundant-timestamp-for-frame-link_left_wheel-at-time-618268000-according-to-authority-unknown_publisher/ -->
+ 
+  <!-- slam_toolbox -->
+  <node pkg="slam_toolbox" type="sync_slam_toolbox_node" name="slam_toolbox" output="screen">
+    <rosparam command="load" file="$(find slam_toolbox)/config/gazebo_mapper_params_online_sync.yaml" />
+    <remap from="~pose" to="$(arg output_pose_topic)"/>
+    <remap from="~odom" to="$(arg output_odometry_topic)"/>
+  </node>
+
+  <!-- Visualization.-->
+  <group if="$(arg vis)">
+    <node pkg="rviz" type="rviz" name="slam_toolbox_rviz" output="screen" args="-d $(find slam_toolbox)/config/slam_toolbox_turtlebot.rviz">
+    </node>
+  </group>
+
+</launch>

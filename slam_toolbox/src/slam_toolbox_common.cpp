@@ -165,7 +165,7 @@ void SlamToolbox::setROSInterfaces(ros::NodeHandle& node)
 
   if(p_pub_odometry_)
   {
-    scanmatch_odom_pub_ = node.advertise<nav_msgs::Odometry>("/scanmatch_odom", 50);
+    scanmatch_odom_pub_ = node.advertise<nav_msgs::Odometry>("odom", 10);
   }
 }
 
@@ -191,22 +191,6 @@ void SlamToolbox::publishTransformLoop(const double& transform_publish_period)
         msg.header.frame_id = map_frame_;
         msg.header.stamp = scan_header_.stamp + transform_timeout_;
         tfB_->sendTransform(msg);
-      }
-
-      // publish odometry
-      if (p_pub_odometry_ && tf_->canTransform(
-        map_frame_, base_frame_, ros::Time(0)))
-      {
-        const geometry_msgs::TransformStamped tmp = tf_->lookupTransform(
-          map_frame_, base_frame_, ros::Time(0));
-        nav_msgs::Odometry odo;
-        odo.header = tmp.header;
-        odo.child_frame_id = base_frame_;
-        odo.pose.pose.position.x = tmp.transform.translation.x;
-        odo.pose.pose.position.y = tmp.transform.translation.y;
-        odo.pose.pose.position.z = tmp.transform.translation.z;
-        odo.pose.pose.orientation = tmp.transform.rotation;
-        scanmatch_odom_pub_.publish(odo);
       }
     }
     r.sleep();
@@ -594,6 +578,16 @@ void SlamToolbox::publishPose(
   pose_msg.pose.covariance[35] = cov(2, 2) * yaw_covariance_scale_;      // yaw
 
   pose_pub_.publish(pose_msg);
+
+  if (p_pub_odometry_)
+  {
+    nav_msgs::Odometry odo_msg;
+    odo_msg.header = pose_msg.header;
+    odo_msg.child_frame_id = base_frame_;
+    odo_msg.pose = pose_msg.pose;
+    // Leave twist un-assinged
+    scanmatch_odom_pub_.publish(odo_msg);
+  }
 }
 
 /*****************************************************************************/
