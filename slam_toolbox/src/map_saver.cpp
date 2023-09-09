@@ -51,15 +51,16 @@ bool MapSaver::saveMapCallback(
   }
 
   const std::string name = req.name.data;
+  const std::string cmd = "rosrun map_server map_saver map:=" + map_name_;
   if (name != "")
   {
     ROS_INFO("SlamToolbox: Saving map as %s.", name.c_str());
-    int rc = system(("rosrun map_server map_saver -f " + name).c_str());
+    int rc = system((cmd + " -f " + name).c_str());
   }
   else
   {
     ROS_INFO("SlamToolbox: Saving map in current directory.");
-    int rc = system("rosrun map_server map_saver");
+    int rc = system(cmd.c_str());
   }
   ros::Duration(1.0).sleep();
   return true;

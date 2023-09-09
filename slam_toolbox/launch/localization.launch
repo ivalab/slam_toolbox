@@ -1,7 +1,19 @@
 <launch>
 
+  <arg name="vis" default="false"/>
+  <arg name="output_pose_topic" default="/scanmatch/pose"/>
+  <arg name="output_odometry_topic" default="/scanmatch/odom"/>
+
   <node pkg="slam_toolbox" type="localization_slam_toolbox_node" name="slam_toolbox" output="screen">
     <rosparam command="load" file="$(find slam_toolbox)/config/mapper_params_localization.yaml" />
+    <remap from="~pose" to="$(arg output_pose_topic)"/>
+    <remap from="~odom" to="$(arg output_odometry_topic)"/>
   </node>
+
+  <!-- Visualization.-->
+  <group if="$(arg vis)">
+    <node pkg="rviz" type="rviz" name="slam_toolbox_rviz" output="screen" args="-d $(find slam_toolbox)/config/slam_toolbox_turtlebot.rviz">
+    </node>
+  </group>
 
 </launch>

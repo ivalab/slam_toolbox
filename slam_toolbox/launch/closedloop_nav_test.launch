@@ -1,5 +1,5 @@
 <launch>
-
+  <arg name="mode" default="mapping"/>
   <arg name="vis" default="false"/>
   <arg name="output_pose_topic" default="/scanmatch/pose"/>
   <arg name="output_odometry_topic" default="/scanmatch/odom"/>
@@ -14,12 +14,23 @@
     
     at the end of the launch command to avoid tf warnings, ref: https://answers.ros.org/question/377796/tf_repeated_data-ignoring-data-with-redundant-timestamp-for-frame-link_left_wheel-at-time-618268000-according-to-authority-unknown_publisher/ -->
  
-  <!-- slam_toolbox -->
-  <node pkg="slam_toolbox" type="sync_slam_toolbox_node" name="slam_toolbox" output="screen">
-    <rosparam command="load" file="$(find slam_toolbox)/config/gazebo_mapper_params_online_sync.yaml" />
-    <remap from="~pose" to="$(arg output_pose_topic)"/>
-    <remap from="~odom" to="$(arg output_odometry_topic)"/>
-  </node>
+  <!-- slam_toolbox mapping -->
+  <group if="$(eval arg('mode') == 'mapping')">
+    <node pkg="slam_toolbox" type="sync_slam_toolbox_node" name="slam_toolbox" output="screen">
+      <rosparam command="load" file="$(find slam_toolbox)/config/closedloop_mapping.yaml" />
+      <remap from="~pose" to="$(arg output_pose_topic)"/>
+      <remap from="~odom" to="$(arg output_odometry_topic)"/>
+    </node>
+  </group>
+
+  <!-- slam_toolbox localization -->
+  <group if="$(eval arg('mode') == 'localization')">
+    <node pkg="slam_toolbox" type="localization_slam_toolbox_node" name="slam_toolbox" output="screen">
+      <rosparam command="load" file="$(find slam_toolbox)/config/closedloop_localization.yaml" />
+      <remap from="~pose" to="$(arg output_pose_topic)"/>
+      <remap from="~odom" to="$(arg output_odometry_topic)"/>
+    </node>
+  </group>
 
   <!-- Visualization.-->
   <group if="$(arg vis)">

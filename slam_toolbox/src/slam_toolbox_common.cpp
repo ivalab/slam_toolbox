@@ -143,6 +143,7 @@ void SlamToolbox::setParams(ros::NodeHandle& private_nh)
   private_nh.setParam("paused_new_measurements", false);
 
   private_nh.param("pub_odometry", p_pub_odometry_, false);
+  private_nh.param("invert_tf", p_invert_tf_, false);
 }
 
 /*****************************************************************************/
@@ -186,9 +187,19 @@ void SlamToolbox::publishTransformLoop(const double& transform_publish_period)
       // Avoid publishing tf with initial 0.0 scan timestamp (see ros2 branch)
       if (scan_header_.stamp.toSec() > 0.0 && !scan_header_.frame_id.empty()) {
         geometry_msgs::TransformStamped msg;
-        tf2::convert(map_to_odom_, msg.transform);
-        msg.child_frame_id = odom_frame_;
-        msg.header.frame_id = map_frame_;
+        // (yanwei) To avoid tf conflicts, in order to visualize the lidar map 
+        // once we already have a known map beforehand, we invert the tf.
+        // Now the tf tree becomes to: known_map -> odom -> lidar_map.
+        if (p_invert_tf_) {
+          tf2::convert(map_to_odom_.inverse(), msg.transform);
+          msg.child_frame_id = map_frame_;
+          msg.header.frame_id = odom_frame_;
+        }
+        else {
+          tf2::convert(map_to_odom_, msg.transform);
+          msg.child_frame_id = odom_frame_;
+          msg.header.frame_id = map_frame_;
+        }
         msg.header.stamp = scan_header_.stamp + transform_timeout_;
         tfB_->sendTransform(msg);
       }

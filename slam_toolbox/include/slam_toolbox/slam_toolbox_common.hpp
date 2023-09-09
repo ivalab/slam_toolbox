@@ -147,6 +147,7 @@ protected:
 
   std_msgs::Header scan_header_;
   bool p_pub_odometry_ = false;
+  bool p_invert_tf_ = false;
   ros::Publisher scanmatch_odom_pub_;
 };
 
