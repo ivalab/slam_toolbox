@@ -1,3 +1,29 @@
+## Ubuntu 20.04 & ROS Noetic
+
+The compiling steps are attached here to make life easier. More information about slam_toolbox, and parameters can be found below.
+
+#### Compile
+
+    mkdir -p ~/catkin_ws/src
+    cd ~/catkin_ws/src
+    git clone https://github.com/ivalab/slam_toolbox.git
+    catkin build -j16 -DCMAKE_BUILD_TYPE=Release
+
+#### Run
+
+    cd ~/catkin_ws
+    source devel/setup.bash
+
+    # SLAM / Mapping
+    roslaunch slam_toolbox online_sync.launch
+
+    # Or Localization
+    roslaunch slam_toolbox localization.launch
+
+    # Visualization
+    cd ~/catkin_ws/src/slam_toolbox/slam_toolbox/config/
+    rviz -d slam_toolbox_default.rviz
+
 ## Slam Toolbox
 
 | DockerHub  | [![Build Status](https://img.shields.io/docker/cloud/build/stevemacenski/slam-toolbox.svg?label=build)](https://hub.docker.com/r/stevemacenski/slam-toolbox) | [![Build Status](https://img.shields.io/docker/pulls/stevemacenski/slam-toolbox.svg?maxAge=2592000)](https://hub.docker.com/r/stevemacenski/slam-toolbox) |

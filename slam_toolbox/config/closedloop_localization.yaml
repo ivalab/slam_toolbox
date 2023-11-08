@@ -8,10 +8,13 @@ ceres_loss_function: None
 
 # ROS Parameters
 odom_frame: odom
-map_frame: map
+map_frame: slam_map
 base_frame: base_footprint
 scan_topic: /scan
+map_name: /slam_map
 mode: localization
+pub_odometry: false
+invert_tf: true # to avoid conflicts between slam and nav map
 
 # if you'd like to start localizing on bringup in a map and pose
 map_file_name: /home/yanwei/turtlebot_ws/src/turtlebot_roboslam/maps/slam_toolbox/map_2023-09-12-16:27:54
@@ -31,8 +34,8 @@ stack_size_to_use: 40000000 #// program needs a larger stack size to serialize l
 # General Parameters
 use_scan_matching: true
 use_scan_barycenter: true
-minimum_travel_distance: 0.5
-minimum_travel_heading: 0.5
+minimum_travel_distance: 0.0
+minimum_travel_heading: 0.2
 scan_buffer_size: 3
 scan_buffer_maximum_scan_distance: 10.0
 link_match_minimum_response_fine: 0.1  
