@@ -1452,6 +1452,30 @@ namespace karto
     }
   }
 
+  
+  void MapperGraph::SavePosesAsTxt(const std::string& filename)
+  {
+    std::cout << "start saving" <<std::endl;
+    for (const auto& vertices : GetVertices())
+    {
+      std::ofstream myfile(filename + "_" + vertices.first.GetName() + "_poses_2D.txt");
+      myfile << "# timestamp x y theta" << "\n";
+      myfile << std::setprecision(6);
+      for (const auto& vertex : vertices.second)
+      {
+        if (nullptr == vertex.second)
+        {
+          continue;
+        }
+        const auto& scan = vertex.second->GetObject();
+        myfile << scan->GetTime() << " " << scan->GetCorrectedPose().GetX()
+               << " " << scan->GetCorrectedPose().GetY() << " "
+               << scan->GetCorrectedPose().GetHeading() << "\n";
+      }
+      myfile.close();
+    }
+  }
+
   Vertex<LocalizedRangeScan>* MapperGraph::AddVertex(LocalizedRangeScan* pScan)
   {
     assert(pScan);

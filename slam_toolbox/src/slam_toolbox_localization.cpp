@@ -148,6 +148,7 @@ LocalizedRangeScan* LocalizationSlamToolbox::addScan(
 
   LocalizedRangeScan* range_scan = getLocalizedRangeScan(
     laser, scan, karto_pose);
+  range_scan->SetTime(scan->header.stamp.toSec());
 
   // Add the localized range scan to the smapper
   boost::mutex::scoped_lock lock(smapper_mutex_);

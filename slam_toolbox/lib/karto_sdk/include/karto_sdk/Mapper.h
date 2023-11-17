@@ -727,7 +727,14 @@ namespace karto
      */
     virtual ~MapperGraph();
 
-  public:
+    /**
+     * @brief 
+     * 
+     * @param filename 
+     */
+    void SavePosesAsTxt(const std::string& filename);
+
+public:
     /**
      * Adds a vertex representing the given scan to the graph
      * @param pScan

@@ -43,6 +43,7 @@ inline void write(const std::string& filename,
   {
     mapper.SaveToFile(filename + std::string(".posegraph"));
     dataset.SaveToFile(filename + std::string(".data"));
+    mapper.GetGraph()->SavePosesAsTxt(filename);
   }
   catch (boost::archive::archive_exception e)
   {
