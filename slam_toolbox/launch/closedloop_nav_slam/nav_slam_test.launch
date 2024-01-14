@@ -3,6 +3,10 @@
   <arg name="vis" default="false"/>
   <arg name="output_pose_topic" default="/slam/pose"/>
   <arg name="output_odometry_topic" default="/slam/odom"/>
+  <arg name="map_frame" default="slam_map"/>
+  <arg name="map_name" default="/slam_map"/>
+  <arg name="invert_tf" default="false"/>
+  <arg name="transform_publish_period" default="0.05"/>
   <!-- Uncomment the following block if using laser filter pkg. -->
   <!-- <node pkg="laser_filters" type="scan_to_scan_filter_chain" name="laser_filter">
     <rosparam command="load" file="$(find slam_toolbox)/config/hokuyo_filter_config.yaml" />
@@ -18,6 +22,10 @@
   <group if="$(eval arg('mode') == 'mapping')">
     <node pkg="slam_toolbox" type="async_slam_toolbox_node" name="slam_toolbox" output="screen">
       <rosparam command="load" file="$(find slam_toolbox)/config/closedloop_mapping.yaml" />
+      <param name="map_frame" value="$(arg map_frame)"/>
+      <param name="map_name" value="$(arg map_name)"/>
+      <param name="invert_tf" value="$(arg invert_tf)"/>
+      <param name="transform_publish_period" value="$(arg transform_publish_period)"/>
       <remap from="~pose" to="$(arg output_pose_topic)"/>
       <remap from="~odom" to="$(arg output_odometry_topic)"/>
     </node>
