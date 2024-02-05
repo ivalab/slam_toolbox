@@ -1,7 +1,16 @@
 <launch>
 
+  <arg name="transform_publish_period" default="0.1"/>
+  <arg name="vis" default="false"/>
+
   <node pkg="slam_toolbox" type="sync_slam_toolbox_node" name="slam_toolbox" output="screen">
     <rosparam command="load" file="$(find slam_toolbox)/config/mapper_params_online_sync.yaml" />
+    <param name="transform_publish_period" value="$(arg transform_publish_period)"/>
   </node>
 
+  <!-- Visualization.-->
+  <group if="$(arg vis)">
+    <node pkg="rviz" type="rviz" name="slam_toolbox_rviz" output="screen" args="-d $(find slam_toolbox)/config/slam_toolbox_turtlebot.rviz">
+    </node>
+  </group>
 </launch>
