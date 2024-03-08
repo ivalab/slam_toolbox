@@ -1459,8 +1459,11 @@ namespace karto
     for (const auto& vertices : GetVertices())
     {
       std::ofstream myfile(filename + "_" + vertices.first.GetName() + "_poses_2D.txt");
+      std::ofstream myfile_tum(filename + "_" + vertices.first.GetName() + "_poses.txt");
       myfile << "# timestamp x y theta" << "\n";
-      myfile << std::setprecision(6);
+      myfile << std::fixed;
+      myfile_tum << "# timestamp tx ty tz qx qy qz qw" << "\n";
+      myfile_tum << std::fixed;
       for (const auto& vertex : vertices.second)
       {
         if (nullptr == vertex.second)
@@ -1468,11 +1471,19 @@ namespace karto
           continue;
         }
         const auto& scan = vertex.second->GetObject();
-        myfile << scan->GetTime() << " " << scan->GetCorrectedPose().GetX()
-               << " " << scan->GetCorrectedPose().GetY() << " "
-               << scan->GetCorrectedPose().GetHeading() << "\n";
+        double timestamp = scan->GetTime();
+        double tx = scan->GetCorrectedPose().GetX();
+        double ty = scan->GetCorrectedPose().GetY();
+        double theta = scan->GetCorrectedPose().GetHeading();
+        myfile << std::setprecision(6) << timestamp << " " 
+               << std::setprecision(7) << tx << " " << ty << " " << theta << "\n";
+        myfile_tum << std::setprecision(6) << timestamp << " " 
+                   << std::setprecision(7) 
+                   << tx << " " << ty << " " << 0 << " "
+                   << 0 << " " << 0 << " " << std::sin(theta / 2.0) << " " << std::cos(theta / 2.0) << "\n";
       }
       myfile.close();
+      myfile_tum.close();
     }
   }
 
