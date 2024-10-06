@@ -17,4 +17,4 @@ gen.add("correlation_search_space_smear_deviation", double_t, 0, "Amount of mult
 
 # gen.add("str_param",    str_t,    0, "A string parameter",  "Hello World")
 # gen.add("bool_param",   bool_t,   0, "A Boolean parameter",  True)
-exit(gen.generate(PACKAGE, "slam_toolbox", "dynamic_params"))
+exit(gen.generate(PACKAGE, "slam_toolbox", "DynamicParams")) # appends "Config.h:" to final param, so using that formatting sadly

@@ -27,6 +27,9 @@
 #include "tf2/LinearMath/Matrix3x3.h"
 #include "tf2_geometry_msgs/tf2_geometry_msgs.h"
 
+#include <dynamic_reconfigure/server.h>
+#include <slam_toolbox/DynamicParamsConfig.h>
+
 #include "pluginlib/class_loader.h"
 
 #include "slam_toolbox/toolbox_types.hpp"
@@ -44,6 +47,8 @@
 #include <cstdlib>
 #include <fstream>
 #include <boost/thread.hpp>
+#include <boost/bind.hpp>
+
 #include <sys/resource.h>
 
 namespace slam_toolbox
@@ -57,6 +62,7 @@ class SlamToolbox
 public:
   SlamToolbox(ros::NodeHandle& nh);
   ~SlamToolbox();
+  void param_change_callback(slam_toolbox::DynamicParamsConfig &config, uint32_t level);
 
 protected:
   // threads

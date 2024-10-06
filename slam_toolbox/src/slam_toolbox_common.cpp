@@ -79,6 +79,16 @@ SlamToolbox::~SlamToolbox()
   scan_holder_.reset();
 }
 
+// Callback attached to the parameter dynamic_reconfigure server
+void param_change_callback(slam_toolbox::DynamicParamsConfig &config, uint32_t level) {
+  ROS_INFO("Reconfigure Request: %d | %d | %d | %d | %d | %d | %d | %d", 
+            config.loop_match_minimum_response_coarse, config.loop_match_minimum_response_fine, 
+            config.minimum_time_interval, config.minimum_travel_distance, 
+            config.minimum_travel_heading, config.correlation_search_space_dimension, 
+            config.correlation_search_space_resolution, config.correlation_search_space_smear_deviation);
+  smapper_->configure(nh_);
+}
+
 /*****************************************************************************/
 void SlamToolbox::setSolver(ros::NodeHandle& private_nh_)
 /*****************************************************************************/
