@@ -30,6 +30,7 @@ find_package(catkin REQUIRED
     interactive_markers
     map_server
     slam_toolbox_msgs
+    dynamic_reconfigure
 )
 
 find_package(PkgConfig REQUIRED)
@@ -80,9 +81,15 @@ catkin_package(
       tf2_geometry_msgs
       interactive_markers
       slam_toolbox_msgs
+      dynamic_reconfigure
     DEPENDS
       EIGEN3
       Boost
+)
+
+# Runs the config file to generate the dynamic parameter config header file needed later
+generate_dynamic_reconfigure_options(
+  config/dynamic_params.cfg  # Replace with your actual .cfg file(s)
 )
 
 #### Ceres Plugin

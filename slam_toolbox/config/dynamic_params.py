@@ -2,6 +2,7 @@
 PACKAGE = "slam_toolbox"
 from dynamic_reconfigure.parameter_generator_catkin import *
 gen = ParameterGenerator()
+
 # need to find out what reasonable mins/maxs are for all these
 #        param name, type, level, description, defualt, min, max
 #                            -(the levels of changed parameters are bitwise ORed and passed as a param to the callback)
