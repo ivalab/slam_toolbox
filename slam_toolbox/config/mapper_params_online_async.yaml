@@ -1,3 +1,7 @@
+# WARNING - Any Parameters Present in the dynamic_params.cfg File Are 
+# Implemented Using the dynamic_reconfigure Library and Are Subject to Change 
+# During Runtime. The Values in this Config Will Simply be Initial Values.
+
 # Plugin params
 solver_plugin: solver_plugins::CeresSolver
 ceres_linear_solver: SPARSE_NORMAL_CHOLESKY
