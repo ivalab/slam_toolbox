@@ -44,8 +44,8 @@ int main(int argc, char** argv)
   // Create dynamic parameter reconfiguration server and attach callback (defined in slam_toolbox_common)
   dynamic_reconfigure::Server<slam_toolbox::DynamicParamsConfig> server;
   dynamic_reconfigure::Server<slam_toolbox::DynamicParamsConfig>::CallbackType cb;
-
-  cb = boost::bind(&param_change_callback, sst, _1, _2);
+  // dynamic_cast<slam_toolbox::SlamToolbox>(sst)
+  cb = boost::bind(&slam_toolbox::SlamToolbox::param_change_callback, &sst, _1, _2);
   server.setCallback(cb);
 
   ros::spin();

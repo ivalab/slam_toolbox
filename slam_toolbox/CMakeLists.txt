@@ -55,6 +55,12 @@ include_directories(include ${catkin_INCLUDE_DIRS}
 
 add_definitions(${EIGEN3_DEFINITIONS})
 
+# Runs the config file to generate the dynamic parameter config header file needed later
+# Must be before catkin_package or it causes a CMake macro error
+generate_dynamic_reconfigure_options(
+  config/DynamicParams.cfg  # Replace with your actual .cfg file(s)
+)
+
 catkin_package(
     INCLUDE_DIRS
       include
@@ -85,11 +91,6 @@ catkin_package(
     DEPENDS
       EIGEN3
       Boost
-)
-
-# Runs the config file to generate the dynamic parameter config header file needed later
-generate_dynamic_reconfigure_options(
-  config/dynamic_params.cfg  # Replace with your actual .cfg file(s)
 )
 
 #### Ceres Plugin

@@ -1,4 +1,4 @@
-# WARNING - Any Parameters Present in the dynamic_params.cfg File Are 
+# WARNING - Any Parameters Present in the DynamicParams.cfg File Are 
 # Implemented Using the dynamic_reconfigure Library and Are Subject to Change 
 # During Runtime. The Values in this Config Will Simply be Initial Values.
 
