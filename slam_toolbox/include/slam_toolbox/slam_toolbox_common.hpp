@@ -28,7 +28,8 @@
 #include "tf2_geometry_msgs/tf2_geometry_msgs.h"
 
 #include <dynamic_reconfigure/server.h>
-#include <slam_toolbox/DynamicParamsConfig.h>
+#include "slam_toolbox/DynamicParamsConfig.h"
+#include "slam_toolbox/data_saver.hpp"
 
 #include "pluginlib/class_loader.h"
 
@@ -155,6 +156,7 @@ protected:
   bool p_pub_odometry_ = false;
   bool p_invert_tf_ = false;
   ros::Publisher scanmatch_odom_pub_;
+  DataSaver data_saver_;
 };
 
 } // end namespace

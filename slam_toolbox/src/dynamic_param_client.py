@@ -19,10 +19,13 @@ if __name__ == "__main__":
     client = dynamic_reconfigure.client.Client("slam_toolbox", timeout=30, config_callback=callback)
     r = rospy.Rate(.5)
     x = 0.01
-    b = False
+    alternator = False
+    trial_num = 1
     while not rospy.is_shutdown():
         x += 0.25
         if x>10:
             x=0.01
-        client.update_configuration({"loop_match_minimum_response_coarse":x, "minimum_travel_distance":(10-x), "correlation_search_space_resolution":(x/10)})
+        client.update_configuration({"loop_match_minimum_response_coarse":x, "minimum_travel_distance":(10-x), 
+                                     "pose_file_name" : "poses_%d.txt"%(trial_num), "cov_file_name" : "covariances_%d.txt"%(trial_num), 
+                                     "latency_file_name" : "latencies_%d.txt"%(trial_num)})
         r.sleep()

@@ -1,3 +1,10 @@
+# Data Saving Parameters
+data_dir: "$(find slam_toolbox)/data/initial_tests"
+# These three are dynamically configured
+pose_file_name : poses_1.txt
+cov_file_name : covariances_1.txt
+latency_file_name : latencies_1.txt
+
 # Plugin params
 solver_plugin: solver_plugins::CeresSolver
 ceres_linear_solver: SPARSE_NORMAL_CHOLESKY

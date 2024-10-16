@@ -102,7 +102,7 @@ target_link_libraries(ceres_solver_plugin ${catkin_LIBRARIES}
 )
 
 #### Tool lib for mapping
-add_library(toolbox_common src/slam_toolbox_common.cpp src/map_saver.cpp src/loop_closure_assistant.cpp src/laser_utils.cpp src/slam_mapper.cpp)
+add_library(toolbox_common src/slam_toolbox_common.cpp src/map_saver.cpp src/loop_closure_assistant.cpp src/laser_utils.cpp src/slam_mapper.cpp src/data_saver.cpp)
 target_link_libraries(toolbox_common kartoSlamToolbox ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 
 #### Mapping executibles

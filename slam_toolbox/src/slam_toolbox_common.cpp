@@ -35,8 +35,9 @@ SlamToolbox::SlamToolbox(ros::NodeHandle& nh)
 {
   smapper_ = std::make_unique<mapper_utils::SMapper>();
   dataset_ = std::make_unique<karto::Dataset>();
-
   setParams(nh_);
+  data_saver_ = DataSaver(data_dir_);
+  data_saver_.setFileNames(pose_file_name_, cov_file_name_, latency_file_name_);
   setROSInterfaces(nh_);
   setSolver(nh_);
 
@@ -86,7 +87,10 @@ void SlamToolbox::param_change_callback(slam_toolbox::DynamicParamsConfig &confi
             config.minimum_time_interval, config.minimum_travel_distance, 
             config.minimum_travel_heading, config.correlation_search_space_dimension, 
             config.correlation_search_space_resolution, config.correlation_search_space_smear_deviation);
-  smapper_->configure(nh_);
+  setParams(nh_);
+  // Level of 2 indicates that one of the filenames were changed, so the data_saver_ must be updated
+  // Bitwise operation because level is OR-ed together for all parameters changed - all of the filenames have level = 2
+  if (level & 2) data_saver_.setFileNames(pose_file_name_, cov_file_name_, latency_file_name_);
 }
 
 /*****************************************************************************/
@@ -118,6 +122,12 @@ void SlamToolbox::setSolver(ros::NodeHandle& private_nh_)
 void SlamToolbox::setParams(ros::NodeHandle& private_nh)
 /*****************************************************************************/
 {
+  // Data saving params
+  private_nh.param("data_dir", data_dir_, std::string(ros::package::getPath() + "/data/initial_tests"));
+  private_nh.param("pose_file_name", pose_file_name_, "poses_1.txt");
+  private_nh.param("cov_file_name", cov_file_name_, "covariances_1.txt");
+  private_nh.param("latency_file_name", latency_file_name_, "latencies_1.txt");
+
   map_to_odom_.setIdentity();
   private_nh.param("odom_frame", odom_frame_, std::string("odom"));
   private_nh.param("map_frame", map_frame_, std::string("map"));
@@ -600,6 +610,8 @@ void SlamToolbox::publishPose(
   pose_msg.pose.covariance[35] = cov(2, 2) * yaw_covariance_scale_;      // yaw
 
   pose_pub_.publish(pose_msg);
+  // Save data through fstreams with data_saver_
+  data_saver_.save_data(t.toSec(), pose_msg.pose.pose, cov, t - ros::Time::now());
 
   if (p_pub_odometry_)
   {
