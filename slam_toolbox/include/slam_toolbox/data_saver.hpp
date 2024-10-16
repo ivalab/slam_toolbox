@@ -23,21 +23,22 @@ private:
     std::string tumFileName;
     std::string covFileName;
     std::string latencyFileName;
-    std::stromg dataDir;
+    std::string dataDir;
 
     // Internal functions for actually writing the data to the different files
-    void saveTUMData(double timestamp, const geometry_msgs::pose& pose);
-    void saveCovarianceData(double timestamp, const karto::Matrix3& cov);
-    void saveLatencyData(double timestamp, const ros::Time& latency);
+    void saveTUMData(const double timestamp, const geometry_msgs::Pose& pose);
+    void saveCovarianceData(const double timestamp, const karto::Matrix3& cov);
+    void saveLatencyData(const double timestamp, const double latency);
 
 public:
-    DataSaver(const std::string& dataDir);
+    DataSaver();
     ~DataSaver();
     // Needed for multirun script
+    void setDataDir(const std::string& dataDirPath);
     void setFileNames(const std::string& newTumFileName, const std::string& newCovFileName, const std::string& newLatencyFileName);
 
     // Functions to save data one timestamp of data
-    void saveData(double timestamp, geometry_msgs::pose& pose, karto::Matrix3& covariance, ros::Time& latency);
+    void saveData(const double timestamp, const geometry_msgs::Pose& pose, const karto::Matrix3& covariance, const double latency);
 };
 
 #endif 

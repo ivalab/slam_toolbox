@@ -36,7 +36,7 @@ SlamToolbox::SlamToolbox(ros::NodeHandle& nh)
   smapper_ = std::make_unique<mapper_utils::SMapper>();
   dataset_ = std::make_unique<karto::Dataset>();
   setParams(nh_);
-  data_saver_ = DataSaver(data_dir_);
+  data_saver_.setDataDir(data_dir_);
   data_saver_.setFileNames(pose_file_name_, cov_file_name_, latency_file_name_);
   setROSInterfaces(nh_);
   setSolver(nh_);
@@ -123,10 +123,10 @@ void SlamToolbox::setParams(ros::NodeHandle& private_nh)
 /*****************************************************************************/
 {
   // Data saving params
-  private_nh.param("data_dir", data_dir_, std::string(ros::package::getPath() + "/data/initial_tests"));
-  private_nh.param("pose_file_name", pose_file_name_, "poses_1.txt");
-  private_nh.param("cov_file_name", cov_file_name_, "covariances_1.txt");
-  private_nh.param("latency_file_name", latency_file_name_, "latencies_1.txt");
+  private_nh.param("data_dir", data_dir_, std::string(ros::package::getPath("slam_toolbox") + "/data/initial_tests"));
+  private_nh.param("pose_file_name", pose_file_name_, std::string("poses_1.txt"));
+  private_nh.param("cov_file_name", cov_file_name_, std::string("covariances_1.txt"));
+  private_nh.param("latency_file_name", latency_file_name_, std::string("latencies_1.txt"));
 
   map_to_odom_.setIdentity();
   private_nh.param("odom_frame", odom_frame_, std::string("odom"));
@@ -611,7 +611,7 @@ void SlamToolbox::publishPose(
 
   pose_pub_.publish(pose_msg);
   // Save data through fstreams with data_saver_
-  data_saver_.save_data(t.toSec(), pose_msg.pose.pose, cov, t - ros::Time::now());
+  data_saver_.saveData(t.toSec(), pose_msg.pose.pose, cov, (t - ros::Time::now()).toNSec());
 
   if (p_pub_odometry_)
   {

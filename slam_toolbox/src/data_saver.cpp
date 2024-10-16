@@ -1,12 +1,16 @@
-#include "slam_toolbox/DataSaver.hpp"
+#include "slam_toolbox/data_saver.hpp"
 
-DataSaver::DataSaver(const std::string& dataDir) : dataDir(dataDir), tumFileName(""), covFileName(""), latencyFileName("") {}
+DataSaver::DataSaver() : dataDir(""), tumFileName(""), covFileName(""), latencyFileName("") {}
 
 // Destructor that closes files
 DataSaver::~DataSaver() {
     if (tumFile.is_open()) tumFile.close();
     if (covFile.is_open()) covFile.close();
     if (latencyFile.is_open()) latencyFile.close();
+}
+
+void DataSaver::setDataDir(const std::string& dataDirPath) {
+    dataDir = dataDirPath;
 }
 
 void DataSaver::setFileNames(const std::string& newTumFileName, const std::string& newCovFileName, const std::string& newLatencyFileName) {
@@ -30,27 +34,27 @@ void DataSaver::setFileNames(const std::string& newTumFileName, const std::strin
         latencyFile.open(dataDir + "/" + latencyFileName, std::ios::out | std::ios::trunc);
     }
     // Check if files are successfully opened
-    if (!tumFile.is_open()) ROS_ERROR("Error opening TUM file: (%s)", tumFileName);
-    if (!covFile.is_open()) ROS_ERROR("Error opening Covariance file: (%s)", covFileName);
-    if (!latencyFile.is_open()) ROS_ERROR("Error opening Latency file: (%s)", latencyFileName);
+    if (!tumFile.is_open()) ROS_ERROR("Error opening TUM file: (%s)", tumFileName.c_str());
+    if (!covFile.is_open()) ROS_ERROR("Error opening Covariance file: (%s)", covFileName.c_str());
+    if (!latencyFile.is_open()) ROS_ERROR("Error opening Latency file: (%s)", latencyFileName.c_str());
 }
 
-void DataSaver::saveData(double timestamp, geometry_msgs::pose &pose, karto::Matrix3 &covariance, ros::Time &latency) {
+void DataSaver::saveData(const double timestamp, const geometry_msgs::Pose &pose, const karto::Matrix3 &covariance, const double latency) {
     saveTUMData(timestamp, pose);
     saveCovarianceData(timestamp, covariance);
     saveLatencyData(timestamp, latency);
 } 
 
 // Save pose data in TUM format
-void DataSaver::saveTUMData(double timestamp, const geometry_msgs::pose& pose) {
+void DataSaver::saveTUMData(const double timestamp, const geometry_msgs::Pose& pose) {
     tumFile << std::fixed << std::setprecision(6);
-    tumFile << timestamp <<" " <<pose.translation.getX <<" " <<pose.translation.getY <<" " \
-                <<pose.translation.getZ <<" " <<pose.orientation.getX <<" " <<pose.orientation.getY \
-                <<" " <<pose.orientation.getZ <<" " <<pose.orientation.getW <<" " <<std::endl;
+    tumFile << timestamp <<" " <<pose.position.x <<" " <<pose.position.y <<" " \
+                <<pose.position.z <<" " <<pose.orientation.x <<" " <<pose.orientation.y \
+                <<" " <<pose.orientation.z <<" " <<pose.orientation.w <<" " <<std::endl;
 }
 
 // Save Covariance data in flattened (row-major) format
-void DataSaver::saveCovarianceData(double timestamp, const karto::Matrix3& cov) {
+void DataSaver::saveCovarianceData(const double timestamp, const karto::Matrix3& cov) {
     covFile << std::fixed << std::setprecision(6);  // Set float precision formatting
     covFile << timestamp <<" " <<cov(0, 0) <<" " <<cov(0, 1) <<" " <<cov(0, 2) <<" " <<cov(1, 0) \
                 <<" " <<cov(1, 1) <<" " <<cov(1, 2) <<" " <<cov(2, 0) <<" " <<cov(2, 1) <<" " \
@@ -58,6 +62,6 @@ void DataSaver::saveCovarianceData(double timestamp, const karto::Matrix3& cov) 
 }
 
 // Save Latency along with timestamp
-void DataSaver::saveLatencyData(double timestamp, const ros::Time& latency) {
-    latencyFile << timestamp << " " <<latencyData.toNSec() << std::endl;
+void DataSaver::saveLatencyData(const double timestamp, const double latency) {
+    latencyFile << timestamp << " " <<latency << std::endl;
 }

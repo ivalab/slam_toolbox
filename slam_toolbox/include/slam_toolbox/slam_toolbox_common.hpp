@@ -117,7 +117,7 @@ protected:
   ros::ServiceServer ssMap_, ssPauseMeasurements_, ssSerialize_, ssDesserialize_;
 
   // Storage for ROS parameters
-  std::string odom_frame_, map_frame_, base_frame_, map_name_, scan_topic_;
+  std::string odom_frame_, map_frame_, base_frame_, map_name_, scan_topic_, data_dir_, pose_file_name_, cov_file_name_, latency_file_name_;
   ros::Duration transform_timeout_, tf_buffer_dur_, minimum_time_interval_;
   int throttle_scans_;
 
