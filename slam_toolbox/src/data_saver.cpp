@@ -9,11 +9,12 @@ DataSaver::~DataSaver() {
     if (latencyFile.is_open()) latencyFile.close();
 }
 
-void DataSaver::setDataDir(const std::string& dataDirPath) {
-    dataDir = dataDirPath;
+void DataSaver::setDataDir(const std::string& relDataDirPath) {
+    dataDir = ros::package::getPath("slam_toolbox") + "/" + relDataDirPath;
 }
 
 void DataSaver::setFileNames(const std::string& newTumFileName, const std::string& newCovFileName, const std::string& newLatencyFileName) {
+    ROS_INFO("In setFileNames");
     if (newTumFileName.empty() || newCovFileName.empty() || newLatencyFileName.empty()) {
         ROS_ERROR("TUM (pose), covariance, and latency filenames cannot be empty");
     }
@@ -34,9 +35,9 @@ void DataSaver::setFileNames(const std::string& newTumFileName, const std::strin
         latencyFile.open(dataDir + "/" + latencyFileName, std::ios::out | std::ios::trunc);
     }
     // Check if files are successfully opened
-    if (!tumFile.is_open()) ROS_ERROR("Error opening TUM file: (%s)", tumFileName.c_str());
-    if (!covFile.is_open()) ROS_ERROR("Error opening Covariance file: (%s)", covFileName.c_str());
-    if (!latencyFile.is_open()) ROS_ERROR("Error opening Latency file: (%s)", latencyFileName.c_str());
+    if (!tumFile.is_open()) ROS_ERROR("Error opening TUM file: %s", (dataDir + "/" + tumFileName).c_str());
+    if (!covFile.is_open()) ROS_ERROR("Error opening Covariance file: %s", (dataDir + "/" + covFileName).c_str());
+    if (!latencyFile.is_open()) ROS_ERROR("Error opening Latency file: %s", (dataDir + "/" + latencyFileName).c_str());
 }
 
 void DataSaver::saveData(const double timestamp, const geometry_msgs::Pose &pose, const karto::Matrix3 &covariance, const double latency) {
@@ -63,5 +64,6 @@ void DataSaver::saveCovarianceData(const double timestamp, const karto::Matrix3&
 
 // Save Latency along with timestamp
 void DataSaver::saveLatencyData(const double timestamp, const double latency) {
+    latencyFile << std::fixed << std::setprecision(6);  // Set float precision formatting
     latencyFile << timestamp << " " <<latency << std::endl;
 }

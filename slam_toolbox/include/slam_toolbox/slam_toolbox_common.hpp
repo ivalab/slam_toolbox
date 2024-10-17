@@ -157,6 +157,7 @@ protected:
   bool p_invert_tf_ = false;
   ros::Publisher scanmatch_odom_pub_;
   DataSaver data_saver_;
+  ros::Time t_scan_process_start_;
 };
 
 } // end namespace

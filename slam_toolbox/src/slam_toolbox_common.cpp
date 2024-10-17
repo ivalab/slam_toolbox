@@ -82,11 +82,12 @@ SlamToolbox::~SlamToolbox()
 
 // Callback attached to the parameter dynamic_reconfigure server
 void SlamToolbox::param_change_callback(slam_toolbox::DynamicParamsConfig &config, uint32_t level) {
-  ROS_INFO("Reconfigure Request: %f | %f | %f | %f | %f | %f | %f | %f", 
+  ROS_INFO("Reconfigure Request: %f | %f | %f | %f | %f | %f | %f | %f \nFile Names: %s, %s, %s", 
             config.loop_match_minimum_response_coarse, config.loop_match_minimum_response_fine, 
             config.minimum_time_interval, config.minimum_travel_distance, 
             config.minimum_travel_heading, config.correlation_search_space_dimension, 
-            config.correlation_search_space_resolution, config.correlation_search_space_smear_deviation);
+            config.correlation_search_space_resolution, config.correlation_search_space_smear_deviation,
+            config.pose_file_name.c_str(), config.cov_file_name.c_str(), config.latency_file_name.c_str());
   setParams(nh_);
   // Level of 2 indicates that one of the filenames were changed, so the data_saver_ must be updated
   // Bitwise operation because level is OR-ed together for all parameters changed - all of the filenames have level = 2
@@ -123,7 +124,7 @@ void SlamToolbox::setParams(ros::NodeHandle& private_nh)
 /*****************************************************************************/
 {
   // Data saving params
-  private_nh.param("data_dir", data_dir_, std::string(ros::package::getPath("slam_toolbox") + "/data/initial_tests"));
+  private_nh.param("pkg_relative_data_dir", data_dir_, std::string("data/initial_test"));
   private_nh.param("pose_file_name", pose_file_name_, std::string("poses_1.txt"));
   private_nh.param("cov_file_name", cov_file_name_, std::string("covariances_1.txt"));
   private_nh.param("latency_file_name", latency_file_name_, std::string("latencies_1.txt"));
@@ -520,6 +521,7 @@ karto::LocalizedRangeScan* SlamToolbox::addScan(
   karto::Pose2& karto_pose)
 /*****************************************************************************/
 {  
+  t_scan_process_start_ = ros::Time::now();
   // get our localized range scan
   karto::LocalizedRangeScan* range_scan = getLocalizedRangeScan(
     laser, scan, karto_pose);
@@ -611,7 +613,7 @@ void SlamToolbox::publishPose(
 
   pose_pub_.publish(pose_msg);
   // Save data through fstreams with data_saver_
-  data_saver_.saveData(t.toSec(), pose_msg.pose.pose, cov, (t - ros::Time::now()).toNSec());
+  data_saver_.saveData(t.toSec(), pose_msg.pose.pose, cov, (t_scan_process_start_ - ros::Time::now()).toSec());
 
   if (p_pub_odometry_)
   {

@@ -5,6 +5,7 @@
 #include <string>
 
 #include "ros/ros.h"
+#include "ros/package.h"
 #include "karto_sdk/Karto.h"
 #include <geometry_msgs/Pose.h>
 
@@ -34,7 +35,7 @@ public:
     DataSaver();
     ~DataSaver();
     // Needed for multirun script
-    void setDataDir(const std::string& dataDirPath);
+    void setDataDir(const std::string& relDataDirPath);
     void setFileNames(const std::string& newTumFileName, const std::string& newCovFileName, const std::string& newLatencyFileName);
 
     // Functions to save data one timestamp of data

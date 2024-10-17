@@ -2,10 +2,12 @@
 
   <arg name="transform_publish_period" default="0.1"/>
   <arg name="vis" default="false"/>
+  <arg name="pkg_relative_data_dir" default="data"/>
 
   <node pkg="slam_toolbox" type="async_slam_toolbox_node" name="slam_toolbox" output="screen">
     <rosparam command="load" file="$(find slam_toolbox)/config/mapper_params_online_async.yaml" />
     <param name="transform_publish_period" value="$(arg transform_publish_period)"/>
+    <param name="pkg_relative_data_dir" value="$(arg pkg_relative_data_dir)"/>
   </node>
 
   <!-- Visualization.-->

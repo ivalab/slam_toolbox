@@ -1,5 +1,9 @@
+# WARNING - Any Parameters Present in the DynamicParams.cfg File Are 
+# Implemented Using the dynamic_reconfigure Library and Are Subject to Change 
+# During Runtime. The Values in this Config Will Simply be Initial Values.
+
 # Data Saving Parameters
-data_dir: "$(find slam_toolbox)/data/initial_tests"
+data_dir: "data/initial_tests"
 # These three are dynamically configured
 pose_file_name : poses_1.txt
 cov_file_name : covariances_1.txt
