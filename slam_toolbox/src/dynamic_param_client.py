@@ -8,7 +8,7 @@ def callback(config):
     rospy.loginfo("Setting params to {loop_match_minimum_response_coarse}, {loop_match_minimum_response_fine}, {minimum_time_interval},\
                   {minimum_travel_distance}, {minimum_travel_heading}, {correlation_search_space_dimension}, \
                   {correlation_search_space_resolution}, {correlation_search_space_smear_deviation} \
-                  %nDirs: {pose_file_name}, {cov_file_name}, {latency_file_name}".format(**config)
+                  %nDirs: {loc_file_name_}, {cov_file_name}, {latency_file_name}".format(**config)
                  )
 
 # loop_match_minimum_response_coarse loop_match_minimum_response_fine minimum_time_interval minimum_travel_distance minimum_travel_heading 
@@ -29,7 +29,9 @@ if __name__ == "__main__":
         alternator = not alternator
         if x>10:
             x=0.01
-        client.update_configuration({"loop_match_minimum_response_coarse":x, "minimum_travel_distance":(10-x), 
-                                     "pose_file_name" : "poses_%d.txt"%(trial_num), "cov_file_name" : "covariances_%d.txt"%(trial_num), 
+        client.update_configuration({"loop_match_minimum_response_coarse":11, "minimum_travel_distance":(10-x), 
+                                     "loc_file_name_" : "loc_poses_%d.txt"%(trial_num), 
+                                     "gt_file_name_" : "gt_poses_%d.txt"%(trial_num), 
+                                     "cov_file_name" : "covariances_%d.txt"%(trial_num), 
                                      "latency_file_name" : "latencies_%d.txt"%(trial_num)})
         r.sleep()

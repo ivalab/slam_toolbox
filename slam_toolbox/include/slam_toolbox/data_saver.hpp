@@ -8,6 +8,7 @@
 #include "ros/package.h"
 #include "karto_sdk/Karto.h"
 #include <geometry_msgs/Pose.h>
+#include <geometry_msgs/TransformStamped.h>
 
 /*
 Manages the saving of data from SLAMToolbox for later analysis.
@@ -18,16 +19,12 @@ For multi-run uses, update the filenames as necessary (for the runs) using chang
 class DataSaver {
 private:
     // These will change during the multirun script!
-    std::ofstream tumFile;
-    std::ofstream covFile;
-    std::ofstream latencyFile;
-    std::string tumFileName;
-    std::string covFileName;
-    std::string latencyFileName;
+    std::ofstream locFile, gtFile, covFile, latencyFile;
+    std::string localizationFileName, gtFileName, covFileName, latencyFileName;
     std::string dataDir;
 
     // Internal functions for actually writing the data to the different files
-    void saveTUMData(const double timestamp, const geometry_msgs::Pose& pose);
+    void saveLocalizationData(const double timestamp, const geometry_msgs::Pose& pose);
     void saveCovarianceData(const double timestamp, const karto::Matrix3& cov);
     void saveLatencyData(const double timestamp, const double latency);
 
@@ -36,10 +33,15 @@ public:
     ~DataSaver();
     // Needed for multirun script
     void setDataDir(const std::string& relDataDirPath);
-    void setFileNames(const std::string& newTumFileName, const std::string& newCovFileName, const std::string& newLatencyFileName);
+    void setFileNames(const std::string& newLocFileName, const std::string& newGTFileName, const std::string& newCovFileName, const std::string& newLatencyFileName);
 
     // Functions to save data one timestamp of data
-    void saveData(const double timestamp, const geometry_msgs::Pose& pose, const karto::Matrix3& covariance, const double latency);
+    // Ground truth data saved seperately in case a ground truth pose has not been made available yet
+    void saveData(const double timestamp, const geometry_msgs::Pose &pose, 
+                         const karto::Matrix3 &covariance, const double latency);
+    // Save ground truth data from gazebo_fake_localization
+    // Saved seperately in case a ground truth pose has not been made available yet
+    void saveGTData(const geometry_msgs::TransformStamped &gt_pose_stamped);
 };
 
 #endif 

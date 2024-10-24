@@ -37,7 +37,7 @@ SlamToolbox::SlamToolbox(ros::NodeHandle& nh)
   dataset_ = std::make_unique<karto::Dataset>();
   setParams(nh_);
   data_saver_.setDataDir(data_dir_);
-  data_saver_.setFileNames(pose_file_name_, cov_file_name_, latency_file_name_);
+  data_saver_.setFileNames(loc_file_name_, gt_file_name_, cov_file_name_, latency_file_name_);
   setROSInterfaces(nh_);
   setSolver(nh_);
 
@@ -82,16 +82,16 @@ SlamToolbox::~SlamToolbox()
 
 // Callback attached to the parameter dynamic_reconfigure server
 void SlamToolbox::param_change_callback(slam_toolbox::DynamicParamsConfig &config, uint32_t level) {
-  ROS_INFO("Reconfigure Request: %f | %f | %f | %f | %f | %f | %f | %f \nFile Names: %s, %s, %s", 
+  ROS_INFO("Reconfigure Request: %f | %f | %f | %f | %f | %f | %f | %f \nFile Names: %s, %s, %s, %s", 
             config.loop_match_minimum_response_coarse, config.loop_match_minimum_response_fine, 
             config.minimum_time_interval, config.minimum_travel_distance, 
             config.minimum_travel_heading, config.correlation_search_space_dimension, 
             config.correlation_search_space_resolution, config.correlation_search_space_smear_deviation,
-            config.pose_file_name.c_str(), config.cov_file_name.c_str(), config.latency_file_name.c_str());
+            config.loc_file_name.c_str(), config.gt_file_name.c_str(), config.cov_file_name.c_str(), config.latency_file_name.c_str());
   setParams(nh_);
   // Level of 2 indicates that one of the filenames were changed, so the data_saver_ must be updated
   // Bitwise operation because level is OR-ed together for all parameters changed - all of the filenames have level = 2
-  if (level & 2) data_saver_.setFileNames(pose_file_name_, cov_file_name_, latency_file_name_);
+  if (level & 2) data_saver_.setFileNames(loc_file_name_, gt_file_name_, cov_file_name_, latency_file_name_);
 }
 
 /*****************************************************************************/
@@ -125,12 +125,14 @@ void SlamToolbox::setParams(ros::NodeHandle& private_nh)
 {
   // Data saving params
   private_nh.param("pkg_relative_data_dir", data_dir_, std::string("data/initial_test"));
-  private_nh.param("pose_file_name", pose_file_name_, std::string("poses_1.txt"));
+  private_nh.param("loc_file_name", loc_file_name_, std::string("loc_poses_1.txt"));
+  private_nh.param("gt_file_name", gt_file_name_, std::string("gt_poses_1.txt"));
   private_nh.param("cov_file_name", cov_file_name_, std::string("covariances_1.txt"));
   private_nh.param("latency_file_name", latency_file_name_, std::string("latencies_1.txt"));
 
   map_to_odom_.setIdentity();
   private_nh.param("odom_frame", odom_frame_, std::string("odom"));
+  private_nh.param("gt_odom_frame", gt_odom_frame_, std::string("odom"));
   private_nh.param("map_frame", map_frame_, std::string("map"));
   private_nh.param("base_frame", base_frame_, std::string("base_footprint"));
   private_nh.param("resolution", resolution_, 0.05);
@@ -612,8 +614,15 @@ void SlamToolbox::publishPose(
   pose_msg.pose.covariance[35] = cov(2, 2) * yaw_covariance_scale_;      // yaw
 
   pose_pub_.publish(pose_msg);
-  // Save data through fstreams with data_saver_
-  data_saver_.saveData(t.toSec(), pose_msg.pose.pose, cov, (t_scan_process_start_ - ros::Time::now()).toSec());
+  // Get the ground truth odom form gt_odom (made by gazebo_fake_localization)  
+  // and save data through fstreams with data_saver_ 
+  try {
+    geometry_msgs::TransformStamped gt_pose = tf_->lookupTransform(base_frame_,gt_odom_frame_, ros::Time(0));
+    data_saver_.saveGTData(gt_pose);
+  } catch (tf2::TransformException &ex) {
+    ROS_WARN("%s",ex.what());
+  }
+  data_saver_.saveData(t.toSec(), pose_msg.pose.pose, cov, (ros::Time::now() - t_scan_process_start_).toSec());
 
   if (p_pub_odometry_)
   {
