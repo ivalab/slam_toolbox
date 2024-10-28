@@ -57,10 +57,10 @@ void DataSaver::saveData(const double timestamp, const geometry_msgs::Pose &pose
 
 // Save SLAM localized pose data in TUM format
 void DataSaver::saveLocalizationData(const double timestamp, const geometry_msgs::Pose& pose) {
-    locFile << std::fixed << std::setprecision(6);
-    locFile << timestamp <<" " <<pose.position.x <<" " <<pose.position.y <<" " \
+    gtFile << std::fixed << std::setprecision(6);
+    gtFile << timestamp <<" " <<pose.position.x <<" " <<pose.position.y <<" " \
                 <<pose.position.z <<" " <<pose.orientation.x <<" " <<pose.orientation.y \
-                <<" " <<pose.orientation.z <<" " <<pose.orientation.w <<" " <<std::endl;
+                <<" " <<pose.orientation.z <<" " <<pose.orientation.w <<std::endl;
 }
 
 // Save ground truth gazebo_fake_localization-derived pose data in TUM format
@@ -69,7 +69,7 @@ void DataSaver::saveGTData(const geometry_msgs::TransformStamped &gt_pose_stampe
     locFile << gt_pose_stamped.header.stamp.toSec() <<" " <<gt_pose_stamped.transform.translation.x <<" " \
             <<gt_pose_stamped.transform.translation.y <<" " <<gt_pose_stamped.transform.translation.z <<" " \
             <<gt_pose_stamped.transform.rotation.x <<" " <<gt_pose_stamped.transform.rotation.y \
-            <<" " <<gt_pose_stamped.transform.rotation.z <<" " <<gt_pose_stamped.transform.rotation.w <<" " <<std::endl;
+            <<" " <<gt_pose_stamped.transform.rotation.z <<" " <<gt_pose_stamped.transform.rotation.w <<std::endl;
 }
 
 // Save Covariance data in flattened (row-major) format

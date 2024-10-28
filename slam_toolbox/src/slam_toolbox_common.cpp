@@ -140,6 +140,7 @@ void SlamToolbox::setParams(ros::NodeHandle& private_nh)
   private_nh.param("scan_topic", scan_topic_, std::string("/scan"));
   private_nh.param("throttle_scans", throttle_scans_, 1);
   private_nh.param("enable_interactive_mode", enable_interactive_mode_, false);
+  ROS_INFO("In setParams | base_frame_ %s and gt_odom_frame_ %s", base_frame_.c_str(), gt_odom_frame_.c_str());
 
   double tmp_val;
   private_nh.param("transform_timeout", tmp_val, 0.2);
@@ -617,10 +618,12 @@ void SlamToolbox::publishPose(
   // Get the ground truth odom form gt_odom (made by gazebo_fake_localization)  
   // and save data through fstreams with data_saver_ 
   try {
-    geometry_msgs::TransformStamped gt_pose = tf_->lookupTransform(base_frame_,gt_odom_frame_, ros::Time(0));
+    geometry_msgs::TransformStamped gt_pose = tf_->lookupTransform(map_frame_, gt_odom_frame_, ros::Time(0));
+    // std::cout <<"-------- NO ERROR --------" <<std::endl; //TODO: DELETE
     data_saver_.saveGTData(gt_pose);
   } catch (tf2::TransformException &ex) {
     ROS_WARN("%s",ex.what());
+    // std::cout <<ex.what() <<std::endl; //TODO: DELETE
   }
   data_saver_.saveData(t.toSec(), pose_msg.pose.pose, cov, (ros::Time::now() - t_scan_process_start_).toSec());
 
