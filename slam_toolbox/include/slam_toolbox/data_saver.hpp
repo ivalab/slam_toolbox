@@ -2,6 +2,7 @@
 #define DATASAVER_H
 
 #include <fstream>
+#include <filesystem>
 #include <string>
 
 #include "ros/ros.h"
@@ -20,13 +21,15 @@ class DataSaver {
 private:
     // These will change during the multirun script!
     std::ofstream locFile, gtFile, covFile, latencyFile;
-    std::string localizationFileName, gtFileName, covFileName, latencyFileName;
+    std::string locFileName, gtFileName, covFileName, latencyFileName;
     std::string dataDir;
 
     // Internal functions for actually writing the data to the different files
     void saveLocalizationData(const double timestamp, const geometry_msgs::Pose& pose);
     void saveCovarianceData(const double timestamp, const karto::Matrix3& cov);
     void saveLatencyData(const double timestamp, const double latency);
+
+    void makeAndOpenFile(std::ofstream& file, const std::string& filepath);
 
 public:
     DataSaver();

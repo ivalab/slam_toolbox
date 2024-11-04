@@ -36,15 +36,15 @@ SlamToolbox::SlamToolbox(ros::NodeHandle& nh)
   smapper_ = std::make_unique<mapper_utils::SMapper>();
   dataset_ = std::make_unique<karto::Dataset>();
   setParams(nh_);
-  data_saver_.setDataDir(data_dir_);
+  data_saver_.setDataDir(rel_data_dir_);
   data_saver_.setFileNames(loc_file_name_, gt_file_name_, cov_file_name_, latency_file_name_);
   setROSInterfaces(nh_);
   setSolver(nh_);
 
   laser_assistant_ = std::make_unique<laser_utils::LaserAssistant>(
-    nh_, tf_.get(), base_frame_);
+    nh_, tfBuff_.get(), base_frame_);
   pose_helper_ = std::make_unique<pose_utils::GetPoseHelper>(
-    tf_.get(), base_frame_, odom_frame_);
+    tfBuff_.get(), base_frame_, odom_frame_);
   scan_holder_ = std::make_unique<laser_utils::ScanHolder>(lasers_);
   map_saver_ = std::make_unique<map_saver::MapSaver>(nh_, map_name_);
   closure_assistant_ =
@@ -88,7 +88,21 @@ void SlamToolbox::param_change_callback(slam_toolbox::DynamicParamsConfig &confi
             config.minimum_travel_heading, config.correlation_search_space_dimension, 
             config.correlation_search_space_resolution, config.correlation_search_space_smear_deviation,
             config.loc_file_name.c_str(), config.gt_file_name.c_str(), config.cov_file_name.c_str(), config.latency_file_name.c_str());
-  setParams(nh_);
+  // Update private node handle's params to match dynamically-reconfigured params
+  nh_.setParam("loc_file_name", config.loc_file_name);
+  nh_.setParam("gt_file_name", config.gt_file_name);
+  nh_.setParam("cov_file_name", config.cov_file_name);
+  nh_.setParam("latency_file_name", config.latency_file_name);
+  nh_.setParam("loop_match_minimum_response_coarse", config.loop_match_minimum_response_coarse);
+  nh_.setParam("loop_match_minimum_response_fine", config.loop_match_minimum_response_fine);
+  nh_.setParam("minimum_time_interval", config.minimum_time_interval);
+  nh_.setParam("minimum_travel_distance", config.minimum_travel_distance);
+  nh_.setParam("minimum_travel_heading", config.minimum_travel_heading);
+  nh_.setParam("correlation_search_space_dimension", config.correlation_search_space_dimension);
+  nh_.setParam("correlation_search_space_resolution", config.correlation_search_space_resolution);
+  nh_.setParam("correlation_search_space_smear_deviation", config.correlation_search_space_smear_deviation);
+  setParams(nh_); // Updates internally-saved values and calls other important methods
+  ROS_INFO("Reconfigure Request Result: %s | %s | %s | %s", loc_file_name_.c_str(), gt_file_name_.c_str(), cov_file_name_.c_str(), latency_file_name_.c_str());
   // Level of 2 indicates that one of the filenames were changed, so the data_saver_ must be updated
   // Bitwise operation because level is OR-ed together for all parameters changed - all of the filenames have level = 2
   if (level & 2) data_saver_.setFileNames(loc_file_name_, gt_file_name_, cov_file_name_, latency_file_name_);
@@ -124,11 +138,11 @@ void SlamToolbox::setParams(ros::NodeHandle& private_nh)
 /*****************************************************************************/
 {
   // Data saving params
-  private_nh.param("pkg_relative_data_dir", data_dir_, std::string("data/initial_test"));
-  private_nh.param("loc_file_name", loc_file_name_, std::string("loc_poses_1.txt"));
-  private_nh.param("gt_file_name", gt_file_name_, std::string("gt_poses_1.txt"));
-  private_nh.param("cov_file_name", cov_file_name_, std::string("covariances_1.txt"));
-  private_nh.param("latency_file_name", latency_file_name_, std::string("latencies_1.txt"));
+  private_nh.param("rel_data_dir", rel_data_dir_, std::string("data/initial_test_this"));
+  private_nh.param("loc_file_name", loc_file_name_, std::string("loc_poses.txt"));
+  private_nh.param("gt_file_name", gt_file_name_, std::string("gt_poses.txt"));
+  private_nh.param("cov_file_name", cov_file_name_, std::string("covariances.txt"));
+  private_nh.param("latency_file_name", latency_file_name_, std::string("latencies.txt"));
 
   map_to_odom_.setIdentity();
   private_nh.param("odom_frame", odom_frame_, std::string("odom"));
@@ -140,7 +154,6 @@ void SlamToolbox::setParams(ros::NodeHandle& private_nh)
   private_nh.param("scan_topic", scan_topic_, std::string("/scan"));
   private_nh.param("throttle_scans", throttle_scans_, 1);
   private_nh.param("enable_interactive_mode", enable_interactive_mode_, false);
-  ROS_INFO("In setParams | base_frame_ %s and gt_odom_frame_ %s", base_frame_.c_str(), gt_odom_frame_.c_str());
 
   double tmp_val;
   private_nh.param("transform_timeout", tmp_val, 0.2);
@@ -174,9 +187,9 @@ void SlamToolbox::setParams(ros::NodeHandle& private_nh)
 void SlamToolbox::setROSInterfaces(ros::NodeHandle& node)
 /*****************************************************************************/
 {
-  tf_ = std::make_unique<tf2_ros::Buffer>(ros::Duration(tf_buffer_dur_));
-  tfL_ = std::make_unique<tf2_ros::TransformListener>(*tf_);
-  tfB_ = std::make_unique<tf2_ros::TransformBroadcaster>();
+  tfBuff_ = std::make_unique<tf2_ros::Buffer>(ros::Duration(tf_buffer_dur_));
+  tfL_ = std::make_unique<tf2_ros::TransformListener>(*tfBuff_);
+  tfBroadcaster_ = std::make_unique<tf2_ros::TransformBroadcaster>();
   sst_ = node.advertise<nav_msgs::OccupancyGrid>(map_name_, 1, true);
   sstm_ = node.advertise<nav_msgs::MapMetaData>(map_name_ + "_metadata", 1, true);
   ssMap_ = node.advertiseService("dynamic_map", &SlamToolbox::mapCallback, this);
@@ -184,7 +197,7 @@ void SlamToolbox::setROSInterfaces(ros::NodeHandle& node)
   ssSerialize_ = node.advertiseService("serialize_map", &SlamToolbox::serializePoseGraphCallback, this);
   ssDesserialize_ = node.advertiseService("deserialize_map", &SlamToolbox::deserializePoseGraphCallback, this);
   scan_filter_sub_ = std::make_unique<message_filters::Subscriber<sensor_msgs::LaserScan> >(node, scan_topic_, 5);
-  scan_filter_ = std::make_unique<tf2_ros::MessageFilter<sensor_msgs::LaserScan> >(*scan_filter_sub_, *tf_, odom_frame_, 5, node);
+  scan_filter_ = std::make_unique<tf2_ros::MessageFilter<sensor_msgs::LaserScan> >(*scan_filter_sub_, *tfBuff_, odom_frame_, 5, node);
   scan_filter_->registerCallback(boost::bind(&SlamToolbox::laserCallback, this, _1));
   pose_pub_ = node.advertise<geometry_msgs::PoseWithCovarianceStamped>("pose", 10, true);
 
@@ -225,7 +238,7 @@ void SlamToolbox::publishTransformLoop(const double& transform_publish_period)
           msg.header.frame_id = map_frame_;
         }
         msg.header.stamp = scan_header_.stamp + transform_timeout_;
-        tfB_->sendTransform(msg);
+        tfBroadcaster_->sendTransform(msg);
       }
     }
     r.sleep();
@@ -400,7 +413,7 @@ tf2::Stamped<tf2::Transform> SlamToolbox::setTransformFromPoses(
   {
     geometry_msgs::TransformStamped base_to_map_msg, odom_to_map_msg;
     tf2::convert(base_to_map, base_to_map_msg);
-    odom_to_map_msg = tf_->transform(base_to_map_msg, odom_frame_);
+    odom_to_map_msg = tfBuff_->transform(base_to_map_msg, odom_frame_);
     tf2::convert(odom_to_map_msg, odom_to_map);
   }
   catch(tf2::TransformException& e)
@@ -618,12 +631,10 @@ void SlamToolbox::publishPose(
   // Get the ground truth odom form gt_odom (made by gazebo_fake_localization)  
   // and save data through fstreams with data_saver_ 
   try {
-    geometry_msgs::TransformStamped gt_pose = tf_->lookupTransform(map_frame_, gt_odom_frame_, ros::Time(0));
-    // std::cout <<"-------- NO ERROR --------" <<std::endl; //TODO: DELETE
+    geometry_msgs::TransformStamped gt_pose = tfBuff_->lookupTransform(map_frame_, gt_odom_frame_, ros::Time(0));
     data_saver_.saveGTData(gt_pose);
   } catch (tf2::TransformException &ex) {
     ROS_WARN("%s",ex.what());
-    // std::cout <<ex.what() <<std::endl; //TODO: DELETE
   }
   data_saver_.saveData(t.toSec(), pose_msg.pose.pose, cov, (ros::Time::now() - t_scan_process_start_).toSec());
 

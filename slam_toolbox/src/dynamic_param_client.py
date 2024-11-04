@@ -30,8 +30,8 @@ if __name__ == "__main__":
         if x>10:
             x=0.01
         client.update_configuration({"loop_match_minimum_response_coarse":11, "minimum_travel_distance":(10-x), 
-                                     "loc_file_name_" : "loc_poses_%d.txt"%(trial_num), 
-                                     "gt_file_name_" : "gt_poses_%d.txt"%(trial_num), 
+                                     "loc_file_name" : "loc_poses_%d.txt"%(trial_num), 
+                                     "gt_file_name" : "gt_poses_%d.txt"%(trial_num), 
                                      "cov_file_name" : "covariances_%d.txt"%(trial_num), 
                                      "latency_file_name" : "latencies_%d.txt"%(trial_num)})
         r.sleep()

@@ -3,7 +3,7 @@
 # During Runtime. The Values in this Config Will Simply be Initial Values.
 
 # Data Saving Parameters
-data_dir: "data/initial_tests"
+rel_data_dir: "data/initial_tests"
 # These four are dynamically configured
 loc_file_name : loc_poses_1.txt
 gt_file_name : gt_poses_1.txt

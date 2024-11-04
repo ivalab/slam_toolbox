@@ -108,9 +108,9 @@ protected:
 
   // ROS-y-ness
   ros::NodeHandle nh_;
-  std::unique_ptr<tf2_ros::Buffer> tf_;
+  std::unique_ptr<tf2_ros::Buffer> tfBuff_;
   std::unique_ptr<tf2_ros::TransformListener> tfL_;
-  std::unique_ptr<tf2_ros::TransformBroadcaster> tfB_;
+  std::unique_ptr<tf2_ros::TransformBroadcaster> tfBroadcaster_;
   std::unique_ptr<message_filters::Subscriber<sensor_msgs::LaserScan> > scan_filter_sub_;
   std::unique_ptr<tf2_ros::MessageFilter<sensor_msgs::LaserScan> > scan_filter_;
   ros::Publisher sst_, sstm_, pose_pub_;
@@ -118,7 +118,7 @@ protected:
 
   // Storage for ROS parameters
   std::string odom_frame_, gt_odom_frame_, map_frame_, base_frame_, map_name_, scan_topic_, 
-              data_dir_, loc_file_name_, gt_file_name_, cov_file_name_, latency_file_name_;
+              rel_data_dir_, loc_file_name_, gt_file_name_, cov_file_name_, latency_file_name_;
   ros::Duration transform_timeout_, tf_buffer_dur_, minimum_time_interval_;
   int throttle_scans_;
 
