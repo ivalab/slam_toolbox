@@ -20,7 +20,7 @@ ceres_loss_function: None
 
 # ROS Parameters
 odom_frame: odom
-gt_odom_frame: gt_odom
+gt_frame: gt_pose
 map_frame: map
 base_frame: base_footprint
 scan_topic: /scan

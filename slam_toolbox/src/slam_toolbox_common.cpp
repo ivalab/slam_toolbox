@@ -146,7 +146,7 @@ void SlamToolbox::setParams(ros::NodeHandle& private_nh)
 
   map_to_odom_.setIdentity();
   private_nh.param("odom_frame", odom_frame_, std::string("odom"));
-  private_nh.param("gt_odom_frame", gt_odom_frame_, std::string("odom"));
+  private_nh.param("gt_frame", gt_frame_, std::string("gt_pose"));
   private_nh.param("map_frame", map_frame_, std::string("map"));
   private_nh.param("base_frame", base_frame_, std::string("base_footprint"));
   private_nh.param("resolution", resolution_, 0.05);
@@ -631,7 +631,7 @@ void SlamToolbox::publishPose(
   // Get the ground truth odom form gt_odom (made by gazebo_fake_localization)  
   // and save data through fstreams with data_saver_ 
   try {
-    geometry_msgs::TransformStamped gt_pose = tfBuff_->lookupTransform(map_frame_, gt_odom_frame_, ros::Time(0));
+    geometry_msgs::TransformStamped gt_pose = tfBuff_->lookupTransform(map_frame_, gt_frame_, ros::Time(0));
     data_saver_.saveGTData(gt_pose);
   } catch (tf2::TransformException &ex) {
     ROS_WARN("%s",ex.what());
