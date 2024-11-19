@@ -132,7 +132,7 @@ void SlamToolbox::param_change_callback(slam_toolbox::DynamicParamsConfig &confi
   setParams(nh_); // Updates internally-saved values and calls other important methods
   // Level of 2 indicates that one of the filenames were changed, so the data_saver_ must be updated
   // Bitwise operation because level is OR-ed together for all parameters changed - all of the filenames have level = 2
-  if (level & 2) datga_saver_.setFileNames(loc_file_name_, gt_file_name_, cov_file_name_, latency_file_name_);
+  if (level & 2) data_saver_.setFileNames(loc_file_name_, gt_file_name_, cov_file_name_, latency_file_name_);
 }
 
 /*****************************************************************************/
