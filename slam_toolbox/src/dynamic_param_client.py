@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 
+# This is a script meant to verify the correct operation of the dynamic parameter setting for SLAM toolbox and not actually part of the
+# final system functionality
+
 import rospy
 
 import dynamic_reconfigure.client
