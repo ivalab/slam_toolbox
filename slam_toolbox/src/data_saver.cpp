@@ -24,7 +24,7 @@ void DataSaver::makeAndOpenFile(std::ofstream& file, const std::string& filepath
 
 void DataSaver::setFileNames(const std::string& newLocFileName, const std::string& newGTFileName, 
                              const std::string& newCovFileName, const std::string& newLatencyFileName) {
-    ROS_INFO("In setFileNames: %s, %s, %s, %s", newLocFileName.c_str(), newGTFileName.c_str(), newCovFileName.c_str(), newLatencyFileName.c_str());
+    // ROS_INFO("In setFileNames: %s, %s, %s, %s", newLocFileName.c_str(), newGTFileName.c_str(), newCovFileName.c_str(), newLatencyFileName.c_str());
     if (newLocFileName.empty() || newGTFileName.empty() || newCovFileName.empty() || newLatencyFileName.empty()) {
         ROS_ERROR("localization (SLAM pose), ground truth pose, covariance, and latency filenames cannot be empty");
     }
