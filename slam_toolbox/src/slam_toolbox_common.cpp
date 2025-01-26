@@ -83,56 +83,62 @@ SlamToolbox::~SlamToolbox()
 // Callback attached to the parameter dynamic_reconfigure server
 void SlamToolbox::param_change_callback(slam_toolbox::DynamicParamsConfig &config, uint32_t level) {
   ROS_INFO("SLAM Toolbox Reconfigure Request Recieved");
-  // ROS_INFO("Reconfigure Request: %f | %f | %f | %f | %f | %f | %f | %f \nFile Names: %s, %s, %s, %s", 
+  // ROS_INFO("Reconfigure Request: %f | %f | %f | %f | %f | %f | %f | %f \nFile Names: %s, %s, %s, %s\nPaused: %d", 
   //           config.loop_match_minimum_response_coarse, config.loop_match_minimum_response_fine, 
   //           config.minimum_time_interval, config.minimum_travel_distance, 
   //           config.minimum_travel_heading, config.correlation_search_space_dimension, 
   //           config.correlation_search_space_resolution, config.correlation_search_space_smear_deviation,
-  //           config.loc_file_name.c_str(), config.gt_file_name.c_str(), config.cov_file_name.c_str(), config.latency_file_name.c_str());
+  //           config.loc_file_name.c_str(), config.gt_file_name.c_str(), config.cov_file_name.c_str(), config.latency_file_name.c_str(),
+  //           config.paused_new_measurements);
   
-  // Update private node handle's params to match dynamically-reconfigured params
-  // ### ROS Parameters ###
-  nh_.setParam("throttle_scans", config.throttle_scans);
-  nh_.setParam("map_update_interval", config.map_update_interval);
-  nh_.setParam("resolution", config.resolution);
-  nh_.setParam("max_laser_range", config.max_laser_range);
-  nh_.setParam("minimum_time_interval", config.minimum_time_interval);
+  if (level & 2){
+    // Update private node handle's params to match dynamically-reconfigured params
+    // ### ROS Parameters ###
+    nh_.setParam("throttle_scans", config.throttle_scans);
+    nh_.setParam("map_update_interval", config.map_update_interval);
+    nh_.setParam("resolution", config.resolution);
+    nh_.setParam("max_laser_range", config.max_laser_range);
+    nh_.setParam("minimum_time_interval", config.minimum_time_interval);
 
-  // ### General Parameters ###
-  nh_.setParam("use_scan_barycenter", config.use_scan_barycenter);
-  nh_.setParam("minimum_travel_distance", config.minimum_travel_distance);
-  nh_.setParam("minimum_travel_heading", config.minimum_travel_heading);
-  
-  // ### Loop Closure (Primarily) Parameters ###
-  // largely skipping for now (some I already had implemented)
-  nh_.setParam("loop_match_minimum_response_coarse", config.loop_match_minimum_response_coarse);
-  nh_.setParam("loop_match_minimum_response_fine", config.loop_match_minimum_response_fine);
+    // ### General Parameters ###
+    nh_.setParam("use_scan_barycenter", config.use_scan_barycenter);
+    nh_.setParam("minimum_travel_distance", config.minimum_travel_distance);
+    nh_.setParam("minimum_travel_heading", config.minimum_travel_heading);
+    
+    // ### Loop Closure (Primarily) Parameters ###
+    // largely skipping for now (some I already had implemented)
+    nh_.setParam("loop_match_minimum_response_coarse", config.loop_match_minimum_response_coarse);
+    nh_.setParam("loop_match_minimum_response_fine", config.loop_match_minimum_response_fine);
 
-  // ### Correlation Parameters - Loop Closure ###
-  // Skipping for now
-  nh_.setParam("correlation_search_space_dimension", config.correlation_search_space_dimension);
-  nh_.setParam("correlation_search_space_resolution", config.correlation_search_space_resolution);
-  nh_.setParam("correlation_search_space_smear_deviation", config.correlation_search_space_smear_deviation);
+    // ### Correlation Parameters - Loop Closure ###
+    // Skipping for now
+    nh_.setParam("correlation_search_space_dimension", config.correlation_search_space_dimension);
+    nh_.setParam("correlation_search_space_resolution", config.correlation_search_space_resolution);
+    nh_.setParam("correlation_search_space_smear_deviation", config.correlation_search_space_smear_deviation);
 
-  // ### Scan Matcher Parameters ###
-  nh_.setParam("angle_variance_penalty", config.angle_variance_penalty);
-  nh_.setParam("fine_search_angle_offset", config.fine_search_angle_offset);
-  nh_.setParam("coarse_search_angle_offset", config.coarse_search_angle_offset);
-  nh_.setParam("coarse_angle_resolution", config.coarse_angle_resolution);
-  nh_.setParam("minimum_angle_penalty", config.minimum_angle_penalty);
-  nh_.setParam("minimum_distance_penalty", config.minimum_distance_penalty);
-  
-  // ### Data saving file name parameters ###
-  nh_.setParam("loc_file_name", config.loc_file_name);
-  nh_.setParam("gt_file_name", config.gt_file_name);
-  nh_.setParam("cov_file_name", config.cov_file_name);
-  nh_.setParam("latency_file_name", config.latency_file_name);
+    // ### Scan Matcher Parameters ###
+    nh_.setParam("angle_variance_penalty", config.angle_variance_penalty);
+    nh_.setParam("fine_search_angle_offset", config.fine_search_angle_offset);
+    nh_.setParam("coarse_search_angle_offset", config.coarse_search_angle_offset);
+    nh_.setParam("coarse_angle_resolution", config.coarse_angle_resolution);
+    nh_.setParam("minimum_angle_penalty", config.minimum_angle_penalty);
+    nh_.setParam("minimum_distance_penalty", config.minimum_distance_penalty);
 
-  // Handle Param Changes  
+    // ### Data saving file name parameters ###
+    nh_.setParam("loc_file_name", config.loc_file_name);
+    nh_.setParam("gt_file_name", config.gt_file_name);
+    nh_.setParam("cov_file_name", config.cov_file_name);
+    nh_.setParam("latency_file_name", config.latency_file_name);
+  }
+  if (level & 4) nh_.setParam("paused_new_measurements", config.paused_new_measurements);
+
+  // Handle Param Changes for the implementation files
   setParams(nh_); // Updates internally-saved values and calls other important methods
-  // Level of 2 indicates that one of the filenames were changed, so the data_saver_ must be updated
-  // Bitwise operation because level is OR-ed together for all parameters changed - all of the filenames have level = 2
-  if (level & 2) data_saver_.setFileNames(loc_file_name_, gt_file_name_, cov_file_name_, latency_file_name_);
+
+  if (level & 2){
+    // Level of 2 indicates that one of the filenames were changed, so the data_saver_ must be updated
+    data_saver_.setFileNames(loc_file_name_, gt_file_name_, cov_file_name_, latency_file_name_);
+  }
 }
 
 /*****************************************************************************/
@@ -204,7 +210,9 @@ void SlamToolbox::setParams(ros::NodeHandle& private_nh)
   }
 
   smapper_->configure(private_nh);
-  private_nh.setParam("paused_new_measurements", false);
+  if (!private_nh.hasParam("paused_new_measurements")) {
+      private_nh.setParam("paused_new_measurements", false);
+  }
 
   private_nh.param("pub_odometry", p_pub_odometry_, false);
   private_nh.param("invert_tf", p_invert_tf_, false);
