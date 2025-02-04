@@ -56,6 +56,27 @@ void DataSaver::setFileNames(const std::string& newLocFileName, const std::strin
     if (!latencyFile.is_open()) ROS_ERROR("Error opening Latency file: %s", (dataDir + "/" + latencyFileName).c_str());
 }
 
+// TODO (CARL): Add a function to flush files and note failures (intended to be called by node when !ros::ok())
+bool DataSaver::close_all_files() {
+    if (locFile.is_open()) locFile.close();
+    if (gtFile.is_open()) gtFile.close();
+    if (covFile.is_open()) covFile.close();
+    if (latencyFile.is_open()) latencyFile.close();
+    return true;
+}
+
+bool DataSaver::record_failure(const std::string& failed_output_filename, const ros::Time& failure_time) {
+    std::ofstream failure_record(dataDir + "/SLAM_failures.txt", std::ios::out | std::ios::app);
+    if (!failure_record.is_open()) {
+        ROS_ERROR("Failed to open failuring logging file, recording SLAMToolbox failure here: %s etc failed at %f (sec)!", failed_output_filename.c_str(), failure_time.toSec());
+        return false;
+    }
+    // Record name of one of the output files for the test that failed as well as the rostime of the failure 
+    failure_record << failed_output_filename <<" etc failed at " <<failure_time.toSec() << std::endl;
+    failure_record.close();
+    return true;
+}
+
 void DataSaver::saveData(const double timestamp, const geometry_msgs::Pose &pose, 
                          const karto::Matrix3 &covariance, const double latency) {
     saveLocalizationData(timestamp, pose);

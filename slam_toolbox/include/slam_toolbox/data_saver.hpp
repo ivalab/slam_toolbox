@@ -20,7 +20,7 @@ For multi-run uses, update the filenames as necessary (for the runs) using chang
 class DataSaver {
 private:
     // These will change during the multirun script!
-    std::ofstream locFile, gtFile, covFile, latencyFile;
+    std::ofstream locFile, gtFile, covFile, latencyFile, faliure_file;
     std::string locFileName, gtFileName, covFileName, latencyFileName;
     std::string dataDir;
 
@@ -37,6 +37,9 @@ public:
     // Needed for multirun script
     void setDataDir(const std::string& relDataDirPath);
     void setFileNames(const std::string& newLocFileName, const std::string& newGTFileName, const std::string& newCovFileName, const std::string& newLatencyFileName);
+    // Functions to flush files and note failures (intended to be called by node when !ros::ok())
+    bool close_all_files();
+    bool record_failure(const std::string& failed_output_filename, const ros::Time& failure_time);
 
     // Functions to save data one timestamp of data
     // Ground truth data saved seperately in case a ground truth pose has not been made available yet

@@ -47,6 +47,19 @@ int main(int argc, char** argv)
   cb = boost::bind(&slam_toolbox::SlamToolbox::param_change_callback, &sst, _1, _2);
   server.setCallback(cb);
 
-  ros::spin();
+  try
+    {
+      ros::spin();
+    }
+  catch (const std::exception& ex) {
+    ROS_ERROR("Asynchronous SLAMToolbox Exception: %s", ex.what());
+    // Perform cleanup if needed and shutdown ROS
+    ros::shutdown();
+    sst.shutdown_gracefully(true);
+    return 1;
+  }
+  // Ensures current test data is handled on shutdown (and logging)
+  ROS_WARN("Asynchronous SLAMToolbox shutting down gracefully!");
+  sst.shutdown_gracefully(false);
   return 0;
 }

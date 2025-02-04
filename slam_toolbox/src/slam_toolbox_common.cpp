@@ -20,6 +20,7 @@
 
 #include "slam_toolbox/slam_toolbox_common.hpp"
 #include "slam_toolbox/serialization.hpp"
+#include "slam_toolbox/slam_toolbox_common.hpp"
 
 namespace slam_toolbox
 {
@@ -140,6 +141,18 @@ void SlamToolbox::param_change_callback(slam_toolbox::DynamicParamsConfig &confi
     data_saver_.setFileNames(loc_file_name_, gt_file_name_, cov_file_name_, latency_file_name_);
   }
 }
+
+
+bool SlamToolbox::shutdown_gracefully(const bool was_error) {
+  // May want to add other things, but for now just using to ensure data is saved even on failed tasks
+  data_saver_.close_all_files();
+  if (was_error)
+  {
+    data_saver_.record_failure(loc_file_name_, ros::Time::now());
+  }
+  return true;
+}
+
 
 /*****************************************************************************/
 void SlamToolbox::setSolver(ros::NodeHandle& private_nh_)

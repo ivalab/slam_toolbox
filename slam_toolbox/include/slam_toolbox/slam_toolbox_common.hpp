@@ -64,6 +64,8 @@ public:
   SlamToolbox(ros::NodeHandle& nh);
   ~SlamToolbox();
   void param_change_callback(slam_toolbox::DynamicParamsConfig &config, uint32_t level);
+  // manages node shutdown and ensures data is saved
+  virtual bool shutdown_gracefully(const bool was_error);
 
 protected:
   // threads
