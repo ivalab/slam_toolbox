@@ -1,0 +1,2 @@
+correlation_search_space_resolution/0.02828/loc_poses_0.txt etc failed at 8.35
+correlation_search_space_resolution/0.00177/loc_poses_1.txt etc failed at 8.522
