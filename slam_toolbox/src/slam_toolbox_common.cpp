@@ -118,6 +118,7 @@ void SlamToolbox::param_change_callback(slam_toolbox::DynamicParamsConfig &confi
     nh_.setParam("correlation_search_space_smear_deviation", config.correlation_search_space_smear_deviation);
 
     // ### Scan Matcher Parameters ###
+    nh_.setParam("distance_variance_penalty", config.distance_variance_penalty);
     nh_.setParam("angle_variance_penalty", config.angle_variance_penalty);
     nh_.setParam("fine_search_angle_offset", config.fine_search_angle_offset);
     nh_.setParam("coarse_search_angle_offset", config.coarse_search_angle_offset);
