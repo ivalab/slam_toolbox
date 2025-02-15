@@ -29,7 +29,6 @@
 
 #include <dynamic_reconfigure/server.h>
 #include "slam_toolbox/DynamicParamsConfig.h"
-#include "slam_toolbox/data_saver.hpp"
 
 #include "pluginlib/class_loader.h"
 
@@ -64,8 +63,6 @@ public:
   SlamToolbox(ros::NodeHandle& nh);
   ~SlamToolbox();
   void param_change_callback(slam_toolbox::DynamicParamsConfig &config, uint32_t level);
-  // manages node shutdown and ensures data is saved
-  virtual bool shutdown_gracefully(const bool was_error);
 
 protected:
   // threads
@@ -119,8 +116,7 @@ protected:
   ros::ServiceServer ssMap_, ssPauseMeasurements_, ssSerialize_, ssDesserialize_;
 
   // Storage for ROS parameters
-  std::string odom_frame_, gt_frame_, map_frame_, base_frame_, map_name_, scan_topic_, 
-              rel_data_dir_, loc_file_name_, gt_file_name_, cov_file_name_, latency_file_name_;
+  std::string odom_frame_, map_frame_, base_frame_, map_name_, scan_topic_;
   ros::Duration transform_timeout_, tf_buffer_dur_, minimum_time_interval_;
   int throttle_scans_;
 
@@ -158,8 +154,8 @@ protected:
   std_msgs::Header scan_header_;
   bool p_pub_odometry_ = false;
   bool p_invert_tf_ = false;
-  ros::Publisher scanmatch_odom_pub_;
-  DataSaver data_saver_;
+  bool p_pub_latencies_ = false;
+  ros::Publisher scanmatch_odom_pub_, latency_pub_;
   ros::Time t_scan_process_start_;
 };
 

@@ -3,12 +3,9 @@
 # During Runtime. The Values in this Config Will Simply be Initial Values.
 
 # Data Saving Parameters
-rel_data_dir: "data/initial_tests"
-# These four are dynamically configured
-loc_file_name : loc_poses_1.txt
-gt_file_name : gt_poses_1.txt
-cov_file_name : covariances_1.txt
-latency_file_name : latencies_1.txt
+pub_odometry: false
+invert_tf: false
+pub_latencies: false
 
 # Plugin params
 solver_plugin: solver_plugins::CeresSolver
@@ -20,7 +17,6 @@ ceres_loss_function: None
 
 # ROS Parameters
 odom_frame: odom
-gt_frame: gt_pose
 map_frame: map
 base_frame: base_footprint
 scan_topic: /scan

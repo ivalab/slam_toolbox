@@ -5,6 +5,10 @@ set(MSG_DEPS std_srvs std_msgs geometry_msgs)
 
 find_package(catkin REQUIRED COMPONENTS message_generation ${MSG_DEPS})
 
+add_message_files(DIRECTORY msg
+  FILES
+    LatencyStamped.msg
+
 add_service_files(DIRECTORY srv
   FILES
     Pause.srv
