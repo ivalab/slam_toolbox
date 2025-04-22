@@ -65,6 +65,22 @@ SlamToolbox::SlamToolbox(ros::NodeHandle& nh)
 SlamToolbox::~SlamToolbox()
 /*****************************************************************************/
 {
+  if (save_map_) {
+    ros::Time stamp = ros::Time::now();
+    std::stringstream ss;
+    ss << stamp.sec << "." << stamp.nsec;
+    std::string filename = output_dir_ + "/slam_toolbox_" + ss.str();
+    {
+      boost::mutex::scoped_lock lock(smapper_mutex_);
+      serialization::write(filename, *smapper_->getMapper(), *dataset_);
+    }
+    std::ofstream myfile(filename + "_AllFrameTrajectory.txt");
+    for (const auto& p : tracking_poses_) {
+        myfile << p << "\n";
+    }
+    myfile.close();
+  }
+
   for (int i=0; i != threads_.size(); i++)
   {
     threads_[i]->join();
@@ -144,6 +160,8 @@ void SlamToolbox::setParams(ros::NodeHandle& private_nh)
 
   private_nh.param("pub_odometry", p_pub_odometry_, false);
   private_nh.param("invert_tf", p_invert_tf_, false);
+  private_nh.param("output_dir", output_dir_, std::string("/tmp"));
+  private_nh.param("save_map", save_map_, false);
 }
 
 /*****************************************************************************/
@@ -590,6 +608,8 @@ void SlamToolbox::publishPose(
   pose_msg.pose.covariance[35] = cov(2, 2) * yaw_covariance_scale_;      // yaw
 
   pose_pub_.publish(pose_msg);
+
+  tracking_poses_.emplace_back(StampedPose(pose_msg));
 
   if (p_pub_odometry_)
   {

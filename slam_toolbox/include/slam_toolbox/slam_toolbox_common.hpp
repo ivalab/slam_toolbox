@@ -149,6 +149,32 @@ protected:
   bool p_pub_odometry_ = false;
   bool p_invert_tf_ = false;
   ros::Publisher scanmatch_odom_pub_;
+  std::string output_dir_;
+  bool save_map_;
+  struct StampedPose {
+      double timestamp, tx, ty, tz, qx, qy, qz, qw;
+
+      StampedPose(const geometry_msgs::PoseWithCovarianceStamped& m)
+      {
+          timestamp = m.header.stamp.toSec();
+          tx        = m.pose.pose.position.x;
+          ty        = m.pose.pose.position.y;
+          tz        = m.pose.pose.position.z;
+          qx        = m.pose.pose.orientation.x;
+          qy        = m.pose.pose.orientation.y;
+          qz        = m.pose.pose.orientation.z;
+          qw        = m.pose.pose.orientation.w;
+      }
+
+      friend std::ostream& operator<<(std::ostream& os, const StampedPose& s) {
+          os << std::fixed;
+          os << std::setprecision(10) << s.timestamp << " "
+             << std::setprecision(6) << s.tx << " " << s.ty << " " << s.tz
+             << " " << s.qx << " " << s.qy << " " << s.qz << " " << s.qw;
+          return os;
+      }
+  };
+  std::vector<StampedPose> tracking_poses_;
 };
 
 } // end namespace
