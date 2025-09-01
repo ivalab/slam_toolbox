@@ -1455,13 +1455,15 @@ namespace karto
   
   void MapperGraph::SavePosesAsTxt(const std::string& filename)
   {
-    std::cout << "start saving" <<std::endl;
+    printf("start saving keyframe poses ... ");
     for (const auto& vertices : GetVertices())
     {
       std::ofstream myfile(filename + "_" + vertices.first.GetName() + "_poses_2D.txt");
-      std::ofstream myfile_tum(filename + "_" + vertices.first.GetName() + "_poses.txt");
       myfile << "# timestamp x y theta" << "\n";
       myfile << std::fixed;
+
+      // std::ofstream myfile_tum(filename + "_" + vertices.first.GetName() + "_poses.txt");
+      std::ofstream myfile_tum(filename + "_KeyFrameTrajectory.txt");
       myfile_tum << "# timestamp tx ty tz qx qy qz qw" << "\n";
       myfile_tum << std::fixed;
       for (const auto& vertex : vertices.second)
@@ -1485,6 +1487,7 @@ namespace karto
       myfile.close();
       myfile_tum.close();
     }
+    printf("Done!\n");
   }
 
   Vertex<LocalizedRangeScan>* MapperGraph::AddVertex(LocalizedRangeScan* pScan)

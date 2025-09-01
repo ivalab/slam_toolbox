@@ -9,10 +9,11 @@ ceres_loss_function: None
 # ROS Parameters
 odom_frame: odom
 map_frame: map
-base_frame: base_footprint
+base_frame: base_link
 scan_topic: /scan
 mode: mapping #localization
 pub_odometry: true
+save_map: true
 
 # if you'd like to immediately start continuing a map at a given pose
 # or at the dock, but they are mutually exclusive, if pose is given
@@ -31,7 +32,7 @@ minimum_time_interval: 0.0
 transform_timeout: 0.2
 tf_buffer_duration: 30.
 stack_size_to_use: 40000000 #// program needs a larger stack size to serialize large maps
-enable_interactive_mode: true
+enable_interactive_mode: false
 
 # General Parameters
 use_scan_matching: true

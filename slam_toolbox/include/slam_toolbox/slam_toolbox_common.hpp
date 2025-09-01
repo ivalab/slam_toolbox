@@ -173,6 +173,8 @@ protected:
              << " " << s.qx << " " << s.qy << " " << s.qz << " " << s.qw;
           return os;
       }
+
+      static std::string header() { return "# timestamp tx ty tz qx qy qz qw"; }
   };
   std::vector<StampedPose> tracking_poses_;
 };

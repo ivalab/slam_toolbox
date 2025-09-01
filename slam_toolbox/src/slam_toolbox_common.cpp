@@ -66,6 +66,13 @@ SlamToolbox::~SlamToolbox()
 /*****************************************************************************/
 {
   if (save_map_) {
+    if (false)
+    {
+      printf("Offline BA is Enabled! Running ... ");
+      // TODO: set parameters for better results?
+      smapper_->getMapper()->CorrectPoses();
+      printf("Done!\n");
+    }
     ros::Time stamp = ros::Time::now();
     std::stringstream ss;
     ss << stamp.sec << "." << stamp.nsec;
@@ -75,6 +82,7 @@ SlamToolbox::~SlamToolbox()
       serialization::write(filename, *smapper_->getMapper(), *dataset_);
     }
     std::ofstream myfile(filename + "_AllFrameTrajectory.txt");
+    myfile << StampedPose::header() << "\n";
     for (const auto& p : tracking_poses_) {
         myfile << p << "\n";
     }
