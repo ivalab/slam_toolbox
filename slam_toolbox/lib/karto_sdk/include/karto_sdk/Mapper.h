@@ -38,15 +38,21 @@
 
 namespace karto
 {
-  ////////////////////////////////////////////////////////////////////////////////////////
-  // Listener classes
 
-  /**
-   * Abstract class to listen to mapper general messages
-   */
-  class MapperListener
-  {
-  public:
+struct StampedPose3 {
+    double timestamp =-1.0;
+    double tx = 0.0, ty = 0.0, tz = 0.0;
+    double qx = 0.0, qy = 0.0, qz = 0.0, qw = 1.0;
+};
+
+////////////////////////////////////////////////////////////////////////////////////////
+// Listener classes
+
+/**
+ * Abstract class to listen to mapper general messages
+ */
+class MapperListener {
+public:
     /**
      * Called with general message
      */
@@ -779,6 +785,98 @@ public:
      * Optimizes scan poses
      */
     void CorrectPoses();
+
+    void CorrectPosesWithVisualPoseGraph(
+        const std::vector<StampedPose3>& kf_poses);
+
+    inline double wrapToPi(double a) {
+        a = std::fmod(a + M_PI, 2.0*M_PI);
+        if (a < 0) a += 2.0*M_PI;
+        return a - M_PI;
+    }
+
+    inline double yawFromQuat(double qx, double qy, double qz, double qw) {
+      // yaw (around Z) = atan2(2*(w*z + x*y), 1 - 2*(y*y + z*z))
+      const double s1 = 2.0 * (qw * qz + qx * qy);
+      const double c1 = 1.0 - 2.0 * (qy * qy + qz * qz);
+      return std::atan2(s1, c1);
+    }
+
+    inline bool interpolatePose(const std::vector<StampedPose3>& samples,
+                                double tq, Pose2& pose,
+                                bool clamp_to_ends = false)
+    {
+        double out_x, out_y, out_theta;
+        if (samples.size() < 2) return false;
+
+        // Ensure time is within range
+        if (tq < samples.front().timestamp) {
+            if (!clamp_to_ends) return false;
+            out_x     = samples.front().tx;
+            out_y     = samples.front().ty;
+            out_theta = yawFromQuat(samples.front().qx, samples.front().qy,
+                                    samples.front().qz, samples.front().qw);
+            pose      = Pose2(out_x, out_y, out_theta);
+            return true;
+        }
+        if (tq > samples.back().timestamp) {
+            if (!clamp_to_ends) return false;
+            out_x = samples.back().tx;
+            out_y = samples.back().ty;
+            out_theta = yawFromQuat(samples.back().qx, samples.back().qy,
+                                    samples.back().qz, samples.back().qw);
+            pose      = Pose2(out_x, out_y, out_theta);
+            return true;
+        }
+
+        // Find the first sample with t >= tq
+        auto it_hi = std::lower_bound(samples.begin(), samples.end(), tq,
+                                      [](const StampedPose3& s, double tval) {
+                                          return s.timestamp < tval;
+                                      });
+        if (it_hi == samples.begin()) {
+            // tq == first time
+            out_x     = it_hi->tx;
+            out_y     = it_hi->ty;
+            out_theta = yawFromQuat(it_hi->qx, it_hi->qy, it_hi->qz, it_hi->qw);
+            pose      = Pose2(out_x, out_y, out_theta);
+            return true;
+        }
+        if (it_hi == samples.end()) {
+            // tq == last time (handled above, but keep safe)
+            const auto& s = samples.back();
+            out_x = s.tx; out_y = s.ty;
+            out_theta = yawFromQuat(s.qx, s.qy, s.qz, s.qw);
+            pose      = Pose2(out_x, out_y, out_theta);
+            return true;
+        }
+
+        const auto& s1 = *(it_hi - 1); // t1 <= tq
+        const auto& s2 = *it_hi;       // t2 >= tq
+
+        const double t1 = s1.timestamp, t2 = s2.timestamp;
+        if (t2 == t1) {
+            // Degenerate (duplicate timestamps) → use s1
+            out_x = s1.tx; out_y = s1.ty;
+            out_theta = yawFromQuat(s1.qx, s1.qy, s1.qz, s1.qw);
+            pose      = Pose2(out_x, out_y, out_theta);
+            return true;
+        }
+
+        const double alpha = (tq - t1) / (t2 - t1); // in [0,1]
+
+        // Linear interp in XY
+        out_x = (1.0 - alpha) * s1.tx + alpha * s2.tx;
+        out_y = (1.0 - alpha) * s1.ty + alpha * s2.ty;
+
+        // Shortest-path yaw interpolation
+        const double th1 = yawFromQuat(s1.qx, s1.qy, s1.qz, s1.qw);
+        const double th2 = yawFromQuat(s2.qx, s2.qy, s2.qz, s2.qw);
+        double dth = wrapToPi(th2 - th1);
+        out_theta = wrapToPi(th1 + alpha * dth);
+        pose = Pose2(out_x, out_y, out_theta);
+        return true;
+    }
 
     /**
      * Find "nearby" (no further than given distance away) scans through graph links
@@ -2086,6 +2184,10 @@ public:
     inline void CorrectPoses()
     {
       m_pGraph->CorrectPoses();
+    }
+
+    inline void CorrectPosesWithVisualPoseGraph(const std::vector<StampedPose3>& kfs) {
+        m_pGraph->CorrectPosesWithVisualPoseGraph(kfs);
     }
 
   protected:

@@ -37,6 +37,8 @@
 #include "slam_toolbox/map_saver.hpp"
 #include "slam_toolbox/loop_closure_assistant.hpp"
 
+#include <semantic_msgs/KeyFramePoseArray.h>
+
 #include <string>
 #include <map>
 #include <vector>
@@ -70,6 +72,8 @@ protected:
   void setROSInterfaces(ros::NodeHandle& node);
 
   // callbacks
+  void keyframePoseArrayCallback(
+      const semantic_msgs::KeyFramePoseArray::ConstPtr& kfs);
   virtual void laserCallback(const sensor_msgs::LaserScan::ConstPtr& scan) = 0;
   bool mapCallback(nav_msgs::GetMap::Request& req,
     nav_msgs::GetMap::Response& res);
@@ -110,6 +114,7 @@ protected:
   std::unique_ptr<tf2_ros::MessageFilter<sensor_msgs::LaserScan> > scan_filter_;
   ros::Publisher sst_, sstm_, pose_pub_;
   ros::ServiceServer ssMap_, ssPauseMeasurements_, ssSerialize_, ssDesserialize_;
+  ros::Subscriber    kf_sub_;
 
   // Storage for ROS parameters
   std::string odom_frame_, map_frame_, base_frame_, map_name_, scan_topic_;

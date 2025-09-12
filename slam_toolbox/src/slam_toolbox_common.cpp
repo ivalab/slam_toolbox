@@ -219,6 +219,8 @@ void SlamToolbox::setROSInterfaces(ros::NodeHandle& node)
   scan_filter_ = std::make_unique<tf2_ros::MessageFilter<sensor_msgs::LaserScan> >(*scan_filter_sub_, *tf_, odom_frame_, 5, node);
   scan_filter_->registerCallback(boost::bind(&SlamToolbox::laserCallback, this, _1));
   pose_pub_ = node.advertise<geometry_msgs::PoseWithCovarianceStamped>("pose", 10, true);
+  kf_sub_ = node.subscribe("/dummy/visual_slam/pub_keyframe_array", 1,
+                           &SlamToolbox::keyframePoseArrayCallback, this);
 
   if(p_pub_odometry_)
   {
@@ -262,6 +264,24 @@ void SlamToolbox::publishTransformLoop(const double& transform_publish_period)
     }
     r.sleep();
   }
+}
+
+void SlamToolbox::keyframePoseArrayCallback(
+      const semantic_msgs::KeyFramePoseArray::ConstPtr& kfs_msg) {
+    std::vector<karto::StampedPose3> kfs;
+    for (const auto& kf_msg : kfs_msg->poses) {
+        karto::StampedPose3 kf;
+        kf.timestamp = kf_msg.pose.header.stamp.toSec();
+        kf.tx        = kf_msg.pose.pose.position.x;
+        kf.ty        = kf_msg.pose.pose.position.y;
+        kf.tz        = kf_msg.pose.pose.position.z;
+        kf.qx        = kf_msg.pose.pose.orientation.x;
+        kf.qy        = kf_msg.pose.pose.orientation.y;
+        kf.qz        = kf_msg.pose.pose.orientation.z;
+        kf.qw        = kf_msg.pose.pose.orientation.w;
+        kfs.emplace_back(kf);
+    }
+    smapper_->getMapper()->CorrectPosesWithVisualPoseGraph(kfs);
 }
 
 /*****************************************************************************/

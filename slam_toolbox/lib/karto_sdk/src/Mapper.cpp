@@ -2173,6 +2173,23 @@ namespace karto
     }
   }
 
+  void MapperGraph::CorrectPosesWithVisualPoseGraph(
+      const std::vector<StampedPose3>& kf_poses) {
+      auto indexed_scans = m_pMapper->m_pMapperSensorManager->GetScans(karto::Name("Custom Described Lidar"));
+      for (auto& iter: indexed_scans) {
+        if (iter.second == NULL) {
+            continue;
+        }
+        auto scan = iter.second;
+
+        Pose2 corrected_pose;
+        bool  flag = interpolatePose(kf_poses, scan->GetTime(), corrected_pose);
+        if (flag) {
+            scan->SetCorrectedPoseAndUpdate(corrected_pose);
+        }
+      }
+  }
+
   void MapperGraph::UpdateLoopScanMatcher(kt_double rangeThreshold)
   {
     if (m_pLoopScanMatcher) {

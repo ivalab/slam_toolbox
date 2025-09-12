@@ -30,6 +30,7 @@ find_package(catkin REQUIRED
     interactive_markers
     map_server
     slam_toolbox_msgs
+    semantic_msgs
 )
 
 find_package(PkgConfig REQUIRED)
