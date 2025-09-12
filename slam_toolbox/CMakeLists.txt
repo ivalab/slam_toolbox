@@ -7,30 +7,57 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_LIST_DIR}/CMake/")
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/lib/karto_sdk/cmake)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fpermissive -std=c++17")
 
+option(BUILD_OCC_MAPPING "Build OCC Mapping (need semantic_msgs)" OFF)
+
 #karto_sdk lib
 set(BUILD_SHARED_LIBS ON)
 add_subdirectory(lib/karto_sdk)
 
-find_package(catkin REQUIRED
-  COMPONENTS
-    cmake_modules
-    message_filters
-    nav_msgs
-    karto_sdk
-    rosconsole
-    roscpp
-    sensor_msgs
-    sparse_bundle_adjustment
-    tf2
-    tf2_ros
-    tf
-    visualization_msgs
-    pluginlib
-    tf2_geometry_msgs
-    interactive_markers
-    map_server
-    slam_toolbox_msgs
-)
+
+if(BUILD_OCC_MAPPING)
+  find_package(catkin REQUIRED
+    COMPONENTS
+      cmake_modules
+      message_filters
+      nav_msgs
+      karto_sdk
+      rosconsole
+      roscpp
+      sensor_msgs
+      sparse_bundle_adjustment
+      tf2
+      tf2_ros
+      tf
+      visualization_msgs
+      pluginlib
+      tf2_geometry_msgs
+      interactive_markers
+      map_server
+      slam_toolbox_msgs
+      semantic_msgs
+  )
+else()
+  find_package(catkin REQUIRED
+    COMPONENTS
+      cmake_modules
+      message_filters
+      nav_msgs
+      karto_sdk
+      rosconsole
+      roscpp
+      sensor_msgs
+      sparse_bundle_adjustment
+      tf2
+      tf2_ros
+      tf
+      visualization_msgs
+      pluginlib
+      tf2_geometry_msgs
+      interactive_markers
+      map_server
+      slam_toolbox_msgs
+  )
+endif()
 
 find_package(PkgConfig REQUIRED)
 find_package(Eigen3 REQUIRED)
@@ -93,6 +120,10 @@ target_link_libraries(ceres_solver_plugin ${catkin_LIBRARIES}
                                           ${TBB_LIBRARIES}
 )
 
+#### SPLINE FITTING LIB
+add_library(spline_lib src/spline/BSplineSE3.cpp)
+target_link_libraries(spline_lib ${Boost_LIBRARIES})
+
 #### Tool lib for mapping
 add_library(toolbox_common src/slam_toolbox_common.cpp src/map_saver.cpp src/loop_closure_assistant.cpp src/laser_utils.cpp src/slam_mapper.cpp)
 target_link_libraries(toolbox_common kartoSlamToolbox ${catkin_LIBRARIES} ${Boost_LIBRARIES})
@@ -123,8 +154,14 @@ add_executable(merge_maps_kinematic src/merge_maps_kinematic.cpp)
 target_link_libraries(merge_maps_kinematic toolbox_common)
 
 #### Spline fitting
-add_executable(spline_fitting_node src/spline/spline_fitting_node.cpp src/spline/BSplineSE3.cpp)
-target_link_libraries(spline_fitting_node ${Boost_LIBRARIES})
+add_executable(spline_fitting_node src/spline/spline_fitting_node.cpp)
+target_link_libraries(spline_fitting_node spline_lib)
+
+#### Occ Mapping
+if(BUILD_OCC_MAPPING)
+  add_executable(occ_mapping_node src/occ/occ_mapping_node.cpp)
+  target_link_libraries(occ_mapping_node kartoSlamToolbox toolbox_common ${catkin_LIBRARIES} ${Boost_LIBRARIES} spline_lib)
+endif()
 
 #### testing
 #if(CATKIN_ENABLE_TESTING)
@@ -134,22 +171,42 @@ target_link_libraries(spline_fitting_node ${Boost_LIBRARIES})
 #endif()
 
 #### Install
-install(TARGETS toolbox_common
-                async_slam_toolbox
-                async_slam_toolbox_node
-                sync_slam_toolbox
-                sync_slam_toolbox_node
-                localization_slam_toolbox
-                localization_slam_toolbox_node
-                lifelong_slam_toolbox
-                lifelong_slam_toolbox_node
-                ceres_solver_plugin
-                merge_maps_kinematic
-                spline_fitting_node
-  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+if(BUILD_OCC_MAPPING)
+  install(TARGETS toolbox_common
+                  async_slam_toolbox
+                  async_slam_toolbox_node
+                  sync_slam_toolbox
+                  sync_slam_toolbox_node
+                  localization_slam_toolbox
+                  localization_slam_toolbox_node
+                  lifelong_slam_toolbox
+                  lifelong_slam_toolbox_node
+                  ceres_solver_plugin
+                  merge_maps_kinematic
+                  spline_fitting_node
+                  occ_mapping_node
+    RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+    ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+    LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 )
+else()
+  install(TARGETS toolbox_common
+                  async_slam_toolbox
+                  async_slam_toolbox_node
+                  sync_slam_toolbox
+                  sync_slam_toolbox_node
+                  localization_slam_toolbox
+                  localization_slam_toolbox_node
+                  lifelong_slam_toolbox
+                  lifelong_slam_toolbox_node
+                  ceres_solver_plugin
+                  merge_maps_kinematic
+                  spline_fitting_node
+    RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+    ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+    LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  )
+endif()
 
 install(DIRECTORY include/${PROJECT_NAME}/
   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}

@@ -181,6 +181,7 @@ protected:
       static std::string header() { return "# timestamp tx ty tz qx qy qz qw"; }
   };
   std::vector<StampedPose> tracking_poses_;
+
 };
 
 } // end namespace

@@ -39,7 +39,8 @@ void BsplineSE3::feed_trajectory(std::vector<Eigen::VectorXd> traj_points) {
   AlignedEigenMat4d trajectory_points;
   for (size_t i = 0; i < traj_points.size() - 1; i++) {
     Eigen::Matrix4d T_IinG = Eigen::Matrix4d::Identity();
-    T_IinG.block(0, 0, 3, 3) = quat_2_Rot(traj_points.at(i).block(4, 0, 4, 1)).transpose();
+    T_IinG.block(0, 0, 3, 3) = quat_2_Rot(traj_points.at(i).block(4, 0, 4, 1));
+    // .transpose();
     T_IinG.block(0, 3, 3, 1) = traj_points.at(i).block(1, 0, 3, 1);
     trajectory_points.insert({traj_points.at(i)(0), T_IinG});
   }

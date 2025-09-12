@@ -377,7 +377,7 @@ namespace karto
    * @param rSensorName
    * @return scans of device
    */
-  inline LocalizedRangeScanMap& MapperSensorManager::GetScans(const Name& rSensorName)
+  LocalizedRangeScanMap& MapperSensorManager::GetScans(const Name& rSensorName)
   {
     return GetScanManager(rSensorName)->GetScans();
   }
@@ -387,7 +387,7 @@ namespace karto
    * @param rSensorName
    * @return running scans of device
    */
-  inline LocalizedRangeScanVector& MapperSensorManager::GetRunningScans(const Name& rSensorName)
+  LocalizedRangeScanVector& MapperSensorManager::GetRunningScans(const Name& rSensorName)
   {
     return GetScanManager(rSensorName)->GetRunningScans();
   }

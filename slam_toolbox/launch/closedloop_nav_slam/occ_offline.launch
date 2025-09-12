@@ -1,0 +1,15 @@
+<launch>
+
+  <arg name="output_dir"        default="/tmp"/>
+  <arg name="kf_poses_filepath" default=""/>
+  
+  <node pkg="slam_toolbox" type="occ_mapping_node" name="occ_mapping_node" output="screen">
+    <rosparam command="load" file="$(find slam_toolbox)/config/mapper_params_occ_online.yaml" />
+    <param name="output_dir" value="$(arg output_dir)"/>
+    <param name="map_file"   value=""   />
+    <param name="use_loaded_pose" value="false"/>
+    <param name="kf_poses_filepath" value="$(arg kf_poses_filepath)"/>
+    <!-- <param name="transform_publish_period" value="$(arg transform_publish_period)"/> -->
+  </node>
+
+</launch>
