@@ -34,6 +34,7 @@
 #include <karto_sdk/Karto.h>
 
 #include "nanoflann_adaptors.h"
+#include <nlohmann/json.hpp>
 
 namespace karto
 {
@@ -733,6 +734,13 @@ namespace karto
      * @param filename 
      */
     void SavePosesAsTxt(const std::string& filename);
+
+    /**
+     * @brief 
+     * 
+     * @param filename 
+     */
+    void SavePoseGraphJson(const std::string& filename);
 
 public:
     /**
