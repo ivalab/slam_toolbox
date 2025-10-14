@@ -1415,6 +1415,79 @@ MapperGraph::~MapperGraph()
   }
 }
 
+
+void MapperGraph::SavePoseGraphJson(const std::string& filename) {
+  printf("start saving pose-graph ... ");
+  nlohmann::json j;
+  j["frame"] = "world";
+  j["units"] = "meters";
+  j["type"]  = "2d"; // "3d"
+
+  // Save nodes.
+  j["nodes"] = nlohmann::json::array();
+  for (const auto& vertices : GetVertices()) {
+    for (const auto& node : vertices.second) {
+      if (nullptr == node.second)
+      {
+          continue;
+      }
+      const auto& scan = node.second->GetObject();
+      if (scan == nullptr) {
+          continue;
+      }
+      int32_t  node_id   = scan->GetUniqueId();
+      double   timestamp = scan->GetTime();
+      double   tx        = scan->GetCorrectedPose().GetX();
+      double   ty        = scan->GetCorrectedPose().GetY();
+      double   theta     = scan->GetCorrectedPose().GetHeading();
+      nlohmann::json Jn        = {{"stamp", timestamp},
+                                  {"id", node_id},
+                                  {"x", tx},
+                                  {"y", ty},
+                                  {"theta", theta}};
+      // if (node_id == 0) Jn["fixed"] = true;
+      j["nodes"].push_back(Jn);
+    }
+  }
+
+  // Save edges.
+  j["edges"] = nlohmann::json::array();
+  for (const auto& edge : GetEdges()) {
+    if (!edge) {
+        continue;
+    }
+    auto * src = edge->GetSource();
+    auto * dst = edge->GetTarget();
+    if (!src || !dst || !src->GetObject() || !dst->GetObject()) {
+      continue;
+    }
+    karto::EdgeLabel* base_label = edge->GetLabel();
+    if (!base_label) {
+        continue;
+    }
+    auto * link_info = dynamic_cast<karto::LinkInfo *>(base_label);
+    if (!link_info) {
+        continue;
+    }
+
+    nlohmann::json Je;
+    Je["i"] = src->GetObject()->GetUniqueId();
+    Je["j"] = dst->GetObject()->GetUniqueId();
+    const karto::Pose2& rel_pose = link_info->GetPoseDifference();
+    const karto::Matrix3& cov = link_info->GetCovariance();
+    double              tx       = rel_pose.GetX();
+    double              ty       = rel_pose.GetY();
+    double              theta    = rel_pose.GetHeading();
+    Je["obs"]                      = {tx, ty, theta};
+    Je["cov"] = {cov(0, 0), cov(0, 1), cov(0, 2), cov(1, 0), cov(1, 1),
+                 cov(1, 2), cov(2, 0), cov(2, 1), cov(2, 2)};
+    j["edges"].push_back(Je);
+  }
+  std::ofstream f(filename + "_posegraph.json");
+  f << j.dump(2) << std::endl;
+  printf("Done!\n");
+}
+
 Vertex<LocalizedRangeScan> * MapperGraph::AddVertex(LocalizedRangeScan * pScan)
 {
   assert(pScan);

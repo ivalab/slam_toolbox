@@ -42,6 +42,7 @@ inline bool write(
 {
   try {
     mapper.SaveToFile(filename + std::string(".posegraph"));
+    mapper.GetGraph()->SavePoseGraphJson(filename + std::string(".json"));
     dataset.SaveToFile(filename + std::string(".data"));
     return true;
   } catch (boost::archive::archive_exception e) {

@@ -35,6 +35,7 @@
 #include "rclcpp/rclcpp.hpp"
 #include "Karto.h"  // NOLINT
 #include "nanoflann_adaptors.h"  // NOLINT
+#include <nlohmann/json.hpp>
 
 
 namespace karto
@@ -718,10 +719,16 @@ public:
   MapperGraph()
   {
   }
-  /**
+ /**
    * Destructor
    */
   virtual ~MapperGraph();
+
+  /**
+   * Save the pose graph as a json file.
+   * @param filename: Name of the JSON file
+   */
+  void SavePoseGraphJson(const std::string & filename);
 
 public:
   /**
@@ -758,7 +765,7 @@ public:
   kt_bool TryCloseLoop(LocalizedRangeScan * pScan, const Name & rSensorName);
 
   /**
-   * Optimizes scan poses
+   * Optimizes scan poses
    */
   void CorrectPoses();
 
@@ -785,7 +792,7 @@ public:
    */
   LocalizedRangeScanVector FindNearByScans(Name name, const Pose2 refPose, kt_double maxDistance);
 
-  /**
+ /**
    * Find "nearby" (no further than given distance away) vertices through KD-tree
    * @param pScan
    * @param maxDistance
