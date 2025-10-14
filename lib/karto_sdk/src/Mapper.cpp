@@ -1483,7 +1483,7 @@ void MapperGraph::SavePoseGraphJson(const std::string& filename) {
                  cov(1, 2), cov(2, 0), cov(2, 1), cov(2, 2)};
     j["edges"].push_back(Je);
   }
-  std::ofstream f(filename + "_posegraph.json");
+  std::ofstream f(filename);
   f << j.dump(2) << std::endl;
   printf("Done!\n");
 }
