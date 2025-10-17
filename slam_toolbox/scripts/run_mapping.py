@@ -15,20 +15,28 @@ from pathlib import Path
 import os
 import time
 
-DATA_ROOT = "/mnt/IVALAB/rosbags/tsrb/"
+DATA_ROOT = "/mnt/IVALAB/rosbags/tsrb/GW_CL_SEQS"
+# RESULT_ROOT = DATA_ROOT
+RESULT_ROOT = "/tmp"
 SEQUENCES = [
     # "20241012",
-    "20250330",
-    "20250331",
-    "20250530",
-    "20250619",
-    "new/msf/two_loops",
-    "new/msf/one_big_loop",
-    "new/msf/inspection",
+    # "20250330",
+    # "20250331",
+    # "20250530",
+    # "20250619",
+    # "new/msf/two_loops",
+    # "new/msf/one_big_loop",
+    # "new/msf/inspection",
+    # "cl_path/path1",
+    # "20250912_1",
+    # "20250912_2",
+    "20250912_3",
+    # "cl_path/path3",
 ]
 
 ROUND = 1
 SPEED = 0.5
+SAVE_OCC_MAP = True
 
 DEPRECATED_TOPICS = [
     "/map",
@@ -42,6 +50,7 @@ DEPRECATED_TOPICS = [
     "/slam_map",
     "/slam_map_updates",
     "/slam/pose",
+    "/tf",
 ]
 
 
@@ -53,9 +62,9 @@ def remap_topics(topics):
 for seq_index, seq_dir in enumerate(SEQUENCES):
 
     # Run SLAM_Toolbox.
-    output_dir = os.path.join(DATA_ROOT, seq_dir, "slam_toolbox")
+    output_dir = os.path.join(RESULT_ROOT, seq_dir, "slam_toolbox")
     if not os.path.exists(output_dir):
-        os.mkdir(output_dir)
+        Path(output_dir).mkdir(exist_ok=True, parents=True)
     cmd_slam = f"roslaunch slam_toolbox offline.launch output_dir:={output_dir}"
     print(cmd_slam)
     subprocess.Popen(cmd_slam, shell=True)
@@ -65,10 +74,18 @@ for seq_index, seq_dir in enumerate(SEQUENCES):
     bagfiles = sorted(glob.glob(os.path.join(DATA_ROOT, seq_dir, "*.bag")))
     # print(bagfiles)
     bagstr = " ".join(bagfiles)
-    cmd_bag = f"rosbag play {bagstr} -r {SPEED} {remap_topics(DEPRECATED_TOPICS)} -u 10.0"
+    cmd_bag = f"rosbag play {bagstr} -r {SPEED} {remap_topics(DEPRECATED_TOPICS)}"  # -u 735
     print(cmd_bag)
     subprocess.call(cmd_bag, shell=True)
     time.sleep(1)
+
+    # Save SLAM OccMap.
+    if SAVE_OCC_MAP:
+        map_name = f"{output_dir}/map"  # DIR/name
+        map_msg = f"name: {{data: {map_name}}}"
+        cmd_save = f"rosservice call /slam_toolbox/save_map '{map_msg}'"
+        subprocess.call(cmd_save, shell=True)
+        time.sleep(2)
 
     # Kill SLAM_Toolbox
     for node in ["/slam_toolbox"]:
@@ -77,4 +94,4 @@ for seq_index, seq_dir in enumerate(SEQUENCES):
         time.sleep(2)
     time.sleep(5)
 
-    break
+    # break

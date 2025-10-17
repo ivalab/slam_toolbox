@@ -2,6 +2,8 @@
 
   <arg name="output_dir" default="/tmp"/>
 
+  <node pkg="slam_toolbox" type="odom_to_tf.py" name="odom_to_tf" output="screen"/>
+
   <node pkg="slam_toolbox" type="sync_slam_toolbox_node" name="slam_toolbox" output="screen">
     <rosparam command="load" file="$(find slam_toolbox)/config/mapper_params_offline.yaml" />
     <param name="output_dir" value="$(arg output_dir)" />

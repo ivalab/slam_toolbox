@@ -285,12 +285,39 @@ def plot_nav_graph_reps(G_pose: nx.Graph, NavG: nx.Graph, alpha_pose=0.25, show_
     plt.show()
 
 
+def is_on_line(self, left, right, thresh=0.9):
+    self_pos = np.array([self["x"], self["y"]])
+    left_pos = np.array([left["x"], left["y"]])
+    right_pos = np.array([right["x"], right["y"]])
+    v1 = self_pos - left_pos
+    v2 = right_pos - self_pos
+    return (v2 @ v1) > thresh * (np.linalg.norm(v1) * np.linalg.norm(v2))
+
+
+def cluster_by_line(G):
+    node_ids = list(G.nodes.keys())
+    for node_id in node_ids:
+        node = G.nodes[node_id]
+        neighbors = list(G.neighbors(node_id))
+        if len(neighbors) == 2:
+            left = G.nodes[neighbors[0]]
+            right = G.nodes[neighbors[1]]
+            if is_on_line(node, left, right, 0.8):
+                G.remove_node(node_id)
+                G.add_edge(
+                    neighbors[0],
+                    neighbors[1],
+                    type=("merged"),
+                )
+
+
 def main():
-    pg_filename = "/home/yanwei/Desktop/mapping-pg/real_3/slam_toolbox_posegraph.json"
-    im_filename = "/home/yanwei/Desktop/mapping-pg/real_3/images.txt"
-    G, _, _ = load_posegraph_json(pg_filename, images_csv=im_filename)
-    plot_posegraph_2d(G, show_images_count=True)
+    pg_filename = "slam_toolbox_posegraph.json"
+    im_filename = "images.txt"
+    G, _, _ = load_posegraph_json(pg_filename, images_csv=None)
+    plot_posegraph_2d(G, show_images_count=False)
     NavG = build_navigation_graph_with_reps(G, method="grid", grid_size=3.0, connect_via="edges", min_cluster_size=0)
+    # cluster_by_line(NavG)
     plot_nav_graph_reps(G, NavG[0], show_images_count=False)
 
 
