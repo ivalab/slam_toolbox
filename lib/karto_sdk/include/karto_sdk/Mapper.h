@@ -941,13 +941,17 @@ private:
   void serialize(Archive & ar, const unsigned int version)
   {
     std::cout << "MapperGraph <- Graph; ";
-    ar & BOOST_SERIALIZATION_BASE_OBJECT_NVP(Graph<LocalizedRangeScan>);
+    //ar & BOOST_SERIALIZATION_BASE_OBJECT_NVP(Graph<LocalizedRangeScan>);
+    ar & boost::serialization::make_nvp("Graph__LocalizedRangeScan",
+        boost::serialization::base_object<Graph<LocalizedRangeScan>>(*this));
     std::cout << "MapperGraph <- m_pMapper; ";
     ar & BOOST_SERIALIZATION_NVP(m_pMapper);
-    std::cout << "MapperGraph <- m_pLoopScanMatcher; ";
-    ar & BOOST_SERIALIZATION_NVP(m_pLoopScanMatcher);
+
+    //std::cout << "MapperGraph <- m_pLoopScanMatcher; ";
+    //ar & BOOST_SERIALIZATION_NVP(m_pLoopScanMatcher);
     std::cout << "MapperGraph <- m_pTraversal\n";
     ar & BOOST_SERIALIZATION_NVP(m_pTraversal);
+
   }
 };    // MapperGraph
 
@@ -1308,7 +1312,9 @@ private:
   template<class Archive>
   void serialize(Archive & ar, const unsigned int version)
   {
-    ar & BOOST_SERIALIZATION_BASE_OBJECT_NVP(Grid<kt_int8u>);
+    //ar & BOOST_SERIALIZATION_BASE_OBJECT_NVP(Grid<kt_int8u>);
+    ar & boost::serialization::make_nvp("Grid__kt_int8u",
+        boost::serialization::base_object<Grid<kt_int8u>>(*this));
     ar & BOOST_SERIALIZATION_NVP(m_SmearDeviation);
     ar & BOOST_SERIALIZATION_NVP(m_KernelSize);
     if (Archive::is_loading::value) {
@@ -2375,6 +2381,7 @@ protected:
   template<class Archive>
   void serialize(Archive & ar, const unsigned int version)
   {
+
     std::cout << "Mapper <- Module\n";
     ar & BOOST_SERIALIZATION_BASE_OBJECT_NVP(Module);
     ar & BOOST_SERIALIZATION_NVP(m_Initialized);

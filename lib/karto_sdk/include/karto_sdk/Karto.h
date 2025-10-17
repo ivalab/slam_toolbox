@@ -18,6 +18,7 @@
 #ifndef KARTO_SDK__KARTO_H_
 #define KARTO_SDK__KARTO_H_
 
+#include <cmath>
 #include <math.h>
 #include <float.h>
 #include <stdio.h>
@@ -85,6 +86,13 @@ const kt_objecttype ObjectType_Header = ObjectType_Misc | 0x01;
 const kt_objecttype ObjectType_Parameters = ObjectType_Misc | 0x02;
 const kt_objecttype ObjectType_DatasetInfo = ObjectType_Misc | 0x04;
 const kt_objecttype ObjectType_Module = ObjectType_Misc | 0x08;
+
+// JCP HACK: BOOST serialization does not handle inf/nan in text form...
+// What do we do if quiet NaN does not exist?
+#define INF std::numeric_limits<double>::infinity()
+#define NAN std::numeric_limits<double>::quiet_NaN()
+#define SERIALIZE_NAN (std::numeric_limits<double>::max() / 2)
+#define SERIALIZE_INF std::numeric_limits<double>::max()
 
 namespace karto
 {
@@ -1258,11 +1266,44 @@ public:
 
   friend class boost::serialization::access;
   template<class Archive>
-  void serialize(Archive & ar, const unsigned int version)
+  void save(Archive & ar, const unsigned int version) const
   {
-    ar & boost::serialization::make_nvp("m_Values_0", m_Values[0]);
-    ar & boost::serialization::make_nvp("m_Values_1", m_Values[1]);
+    if (std::is_integral<T>::value) {
+      ar & boost::serialization::make_nvp("m_Values_0", m_Values[0]);
+      ar & boost::serialization::make_nvp("m_Values_0", m_Values[1]);
+    }
+    else {
+      double val = m_Values[0];
+      if (std::isnan(val)) { val = SERIALIZE_NAN; }
+      else { val = std::clamp(val, -SERIALIZE_INF, SERIALIZE_INF); }
+      ar & boost::serialization::make_nvp("m_Values_0", val);
+  
+      val = m_Values[1];
+      if (std::isnan(val)) { val = SERIALIZE_NAN; }
+      else { val = std::clamp(val, -SERIALIZE_INF, SERIALIZE_INF); }
+      ar & boost::serialization::make_nvp("m_Values_1", val);
+    }
   }
+  template<class Archive>
+  void load(Archive & ar, const unsigned int version)
+  {
+    if (std::is_integral<T>::value) {
+      ar & boost::serialization::make_nvp("m_Values_0", m_Values[0]);
+      ar & boost::serialization::make_nvp("m_Values_0", m_Values[1]);
+    }
+    else {
+      ar & boost::serialization::make_nvp("m_Values_0", m_Values[0]);
+      ar & boost::serialization::make_nvp("m_Values_1", m_Values[1]);
+      if (m_Values[0] == SERIALIZE_INF) { m_Values[0] = INF; }
+      if (m_Values[0] == -SERIALIZE_INF) { m_Values[0] = -INF; }
+      if (m_Values[0] == SERIALIZE_NAN) { m_Values[0] = NAN; }
+      if (m_Values[1] == SERIALIZE_INF) { m_Values[1] = INF; }
+      if (m_Values[1] == -SERIALIZE_INF) { m_Values[1] = -INF; }
+      if (m_Values[1] == SERIALIZE_NAN) { m_Values[1] = NAN; }
+    }
+  }
+
+  BOOST_SERIALIZATION_SPLIT_MEMBER()
 
 private:
   T m_Values[2];
@@ -5332,8 +5373,22 @@ private:
 
     if (Archive::is_loading::value) {
       m_pRangeReadings = new kt_double[m_NumberOfRangeReadings];
+      ar & boost::serialization::make_array<kt_double>(m_pRangeReadings, m_NumberOfRangeReadings);
+      for (size_t i = 0; i < m_NumberOfRangeReadings; ++i) {
+        if (m_pRangeReadings[i] == SERIALIZE_INF) { m_pRangeReadings[i] = INF; }
+        if (m_pRangeReadings[i] == -SERIALIZE_INF) { m_pRangeReadings[i] = -INF; }
+        if (m_pRangeReadings[i] == SERIALIZE_NAN) { m_pRangeReadings[i] = NAN; }
+      }
     }
-    ar & boost::serialization::make_array<kt_double>(m_pRangeReadings, m_NumberOfRangeReadings);
+    else {
+      kt_double* serialize_copy = new kt_double[m_NumberOfRangeReadings];
+      for (size_t i = 0; i < m_NumberOfRangeReadings; ++i) {
+        if (std::isnan(m_pRangeReadings[i])) { serialize_copy[i] = SERIALIZE_NAN; }
+        else { serialize_copy[i] = std::clamp(m_pRangeReadings[i], -SERIALIZE_INF, SERIALIZE_INF); }
+      }
+      ar & boost::serialization::make_array<kt_double>(serialize_copy, m_NumberOfRangeReadings);
+      delete[] serialize_copy;
+    }
   }
 };    // LaserRangeScan
 
@@ -5712,12 +5767,15 @@ private:
   {
     ar & BOOST_SERIALIZATION_NVP(m_OdometricPose);
     ar & BOOST_SERIALIZATION_NVP(m_CorrectedPose);
-    ar & BOOST_SERIALIZATION_NVP(m_BarycenterPose);
-    ar & BOOST_SERIALIZATION_NVP(m_PointReadings);
-    ar & BOOST_SERIALIZATION_NVP(m_UnfilteredPointReadings);
-    ar & BOOST_SERIALIZATION_NVP(m_BoundingBox);
-    ar & BOOST_SERIALIZATION_NVP(m_IsDirty);
+    //ar & BOOST_SERIALIZATION_NVP(m_BarycenterPose);
+    //ar & BOOST_SERIALIZATION_NVP(m_PointReadings);
+    //ar & BOOST_SERIALIZATION_NVP(m_UnfilteredPointReadings);
+    //ar & BOOST_SERIALIZATION_NVP(m_BoundingBox);
+    //ar & BOOST_SERIALIZATION_NVP(m_IsDirty);
     ar & BOOST_SERIALIZATION_BASE_OBJECT_NVP(LaserRangeScan);
+    if (Archive::is_loading::value) {
+      m_IsDirty = true;
+    }
   }
 
 private:
@@ -6951,16 +7009,22 @@ private:
   void serialize(Archive & ar, const unsigned int version)
   {
     ar & BOOST_SERIALIZATION_NVP(m_pGrid);
-    ar & BOOST_SERIALIZATION_NVP(m_Capacity);
-    ar & BOOST_SERIALIZATION_NVP(m_Size);
-    ar & BOOST_SERIALIZATION_NVP(m_Angles);
+    // ar & BOOST_SERIALIZATION_NVP(m_Capacity);
+    // ar & BOOST_SERIALIZATION_NVP(m_Size);
+    // ar & BOOST_SERIALIZATION_NVP(m_Angles);
+    // if (Archive::is_loading::value) {
+    //   m_ppLookupArray = new LookupArray * [m_Capacity];
+    //   for (kt_int32u i = 0; i < m_Capacity; i++) {
+    //     m_ppLookupArray[i] = new LookupArray();
+    //   }
+    // }
+    // ar & boost::serialization::make_array<LookupArray *>(m_ppLookupArray, m_Capacity);
     if (Archive::is_loading::value) {
-      m_ppLookupArray = new LookupArray * [m_Capacity];
-      for (kt_int32u i = 0; i < m_Capacity; i++) {
-        m_ppLookupArray[i] = new LookupArray();
-      }
+      m_Capacity = 0;
+      m_Size = 0;
+      m_Angles = std::vector<kt_double>();
+      m_ppLookupArray = NULL;
     }
-    ar & boost::serialization::make_array<LookupArray *>(m_ppLookupArray, m_Capacity);
   }
 };            // class GridIndexLookup
 

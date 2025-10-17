@@ -35,6 +35,10 @@
 
 #include "karto_sdk/Mapper.h"
 
+// Save posegraph to xml instead of binary
+#include <boost/archive/xml_iarchive.hpp>
+#include <boost/archive/xml_oarchive.hpp>
+
 BOOST_CLASS_EXPORT(karto::MapperGraph);
 BOOST_CLASS_EXPORT(karto::Graph<karto::LocalizedRangeScan>);
 BOOST_CLASS_EXPORT(karto::EdgeLabel);
@@ -1300,7 +1304,9 @@ public:
   template<class Archive>
   void serialize(Archive & ar, const unsigned int version)
   {
-    ar & BOOST_SERIALIZATION_BASE_OBJECT_NVP(GraphTraversal<T>);
+    //ar & BOOST_SERIALIZATION_BASE_OBJECT_NVP(GraphTraversal<T>);
+    ar & boost::serialization::make_nvp("GraphTraversal", 
+        boost::serialization::base_object<GraphTraversal<T>>(*this));
   }
 };    // class BreadthFirstTraversal
 
@@ -1340,7 +1346,9 @@ protected:
   template<class Archive>
   void serialize(Archive & ar, const unsigned int version)
   {
-    ar & BOOST_SERIALIZATION_BASE_OBJECT_NVP(Visitor<LocalizedRangeScan>);
+    //ar & BOOST_SERIALIZATION_BASE_OBJECT_NVP(Visitor<LocalizedRangeScan>);
+    ar & boost::serialization::make_nvp("Visitor__LocalizedRangeScan",
+        boost::serialization::base_object<Visitor<LocalizedRangeScan>>(*this));
     ar & BOOST_SERIALIZATION_NVP(m_CenterPose);
     ar & BOOST_SERIALIZATION_NVP(m_MaxDistanceSquared);
     ar & BOOST_SERIALIZATION_NVP(m_UseScanBarycenter);
@@ -1379,7 +1387,9 @@ protected:
   template<class Archive>
   void serialize(Archive & ar, const unsigned int version)
   {
-    ar & BOOST_SERIALIZATION_BASE_OBJECT_NVP(Visitor<LocalizedRangeScan>);
+    //ar & BOOST_SERIALIZATION_BASE_OBJECT_NVP(Visitor<LocalizedRangeScan>);
+    ar & boost::serialization::make_nvp("Visitor__LocalizedRangeScan",
+        boost::serialization::base_object<Visitor<LocalizedRangeScan>>(*this));
     ar & BOOST_SERIALIZATION_NVP(m_CenterPose);
     ar & BOOST_SERIALIZATION_NVP(m_MaxDistanceSquared);
     ar & BOOST_SERIALIZATION_NVP(m_UseScanBarycenter);
@@ -2741,16 +2751,18 @@ void Mapper::SaveToFile(const std::string & filename)
 {
   printf("Save To File %s \n", filename.c_str());
   std::ofstream ofs(filename.c_str());
-  boost::archive::binary_oarchive oa(ofs, boost::archive::no_codecvt);
-  oa << BOOST_SERIALIZATION_NVP(*this);
+  boost::archive::xml_oarchive oa(ofs, boost::archive::no_codecvt);
+  // oa << BOOST_SERIALIZATION_NVP(*this);
+  oa << boost::serialization::make_nvp("root", *this);
 }
 
 void Mapper::LoadFromFile(const std::string & filename)
 {
   printf("Load From File %s \n", filename.c_str());
   std::ifstream ifs(filename.c_str());
-  boost::archive::binary_iarchive ia(ifs, boost::archive::no_codecvt);
-  ia >> BOOST_SERIALIZATION_NVP(*this);
+  boost::archive::xml_iarchive ia(ifs, boost::archive::no_codecvt);
+  //ia >> BOOST_SERIALIZATION_NVP(*this);
+  ia >> boost::serialization::make_nvp("root", *this);
   m_Deserialized = true;
   m_Initialized = false;
 }
