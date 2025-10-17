@@ -2736,7 +2736,10 @@ void Mapper::Initialize(kt_double rangeThreshold)
     m_pMapperSensorManager->SetRunningScanBufferSize(m_pScanBufferSize->GetValue());
     m_pMapperSensorManager->SetRunningScanBufferMaximumDistance(m_pScanBufferMaximumScanDistance->GetValue());
 
-    m_pGraph->UpdateLoopScanMatcher(rangeThreshold);
+    m_pGraph->SetLoopScanMatcher(ScanMatcher::Create(this,
+      this->m_pLoopSearchSpaceDimension->GetValue(),
+      this->m_pLoopSearchSpaceResolution->GetValue(),
+      this->m_pLoopSearchSpaceSmearDeviation->GetValue(), rangeThreshold));
   } else {
     m_pMapperSensorManager = new MapperSensorManager(m_pScanBufferSize->GetValue(),
       m_pScanBufferMaximumScanDistance->GetValue());

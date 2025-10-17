@@ -816,6 +816,14 @@ public:
     return m_pLoopScanMatcher;
   }
 
+  inline void SetLoopScanMatcher(ScanMatcher * matcher)
+  {
+    if (m_pLoopScanMatcher) {
+      delete m_pLoopScanMatcher;
+    }
+    m_pLoopScanMatcher = matcher;
+  }
+
   /**
    * Create new scan matcher for graph
    * @param rangeThreshold
@@ -949,6 +957,14 @@ private:
 
     //std::cout << "MapperGraph <- m_pLoopScanMatcher; ";
     //ar & BOOST_SERIALIZATION_NVP(m_pLoopScanMatcher);
+    if (Archive::is_loading::value) {
+        // This seems to be causing segfault, but if we don't do it then
+        // is it not also catastrophic?
+        //if (m_pLoopScanMatcher) {
+        //  delete m_pLoopScanMatcher;
+        //}
+        m_pLoopScanMatcher = NULL;
+    }
     std::cout << "MapperGraph <- m_pTraversal\n";
     ar & BOOST_SERIALIZATION_NVP(m_pTraversal);
 
