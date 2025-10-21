@@ -1,0 +1,46 @@
+<launch>
+  
+  <arg name="map_file"    default="fourth_floor_realworld.yaml" />
+  <arg name="route_graph" default="fourth_floor_realworld.pgm.json" />
+  <arg name="output_dir"  default="/tmp"/>
+  <arg name="scan_rate"   default="10"  />
+  
+  <!-- Load the static map -->
+  <node pkg="map_server" type="map_server" name="map_server" args="$(find slam_toolbox)/config/floorplan/maps/$(arg map_file)" />
+
+  <!-- Start move_base with only a global costmap -->
+  <node pkg="move_base" type="move_base" name="move_base" output="screen">
+    <rosparam file="$(find slam_toolbox)/config/floorplan/params/costmap_common_params.yaml" command="load"/>
+    <rosparam file="$(find slam_toolbox)/config/floorplan/params/global_costmap_params.yaml" command="load"/>
+    <rosparam file="$(find slam_toolbox)/config/floorplan/params/move_base_params.yaml" command="load"/>
+  </node>
+
+  <!-- Static TF if you’re not running a robot -->
+  <!-- map -> base_link (kept identity just so frames exist) -->
+  <node pkg="tf" type="static_transform_publisher" name="map_to_odom"
+        args="0 0 0 0 0 0 map odom 100" />
+  <!-- global map needs this -->
+  <node pkg="tf" type="static_transform_publisher" name="map_to_baselink"
+        args="0 0 0 0 0 0 map base_link 100" />
+
+  <node pkg="slam_toolbox" type="floorplan_to_scan.py" name="floorplan_to_scan" output="screen" >
+    <param name="route_graph" type="string" value="$(find slam_toolbox)/config/floorplan/maps/$(arg route_graph)"/>
+  </node>
+
+  <node pkg="rviz" type="rviz" name="floorplan_rviz" args="-d $(find slam_toolbox)/launch/floorplan/floorplan.rviz"/>
+
+
+  <!-- slam_toolbox -->
+  <node pkg="slam_toolbox" type="sync_slam_toolbox_node" name="slam_toolbox" output="screen">
+    <rosparam command="load" file="$(find slam_toolbox)/config/mapper_params_online_sync.yaml" />
+    <param name="output_dir"   type="string" value="$(arg output_dir)" />
+    <param name="transform_publish_period" type="double" value="0.2"/>
+    <param name="map_frame"    type="string" value="slam_map"/>
+    <param name="map_name"     type="string" value="slam_map"          />
+    <param name="base_frame"   type="string" value="virtual_base_link" />
+    <param name="invert_tf"    type="bool"   value="true"   />
+    <param name="scan_rate"    type="double" value="$(arg scan_rate)" />
+    <param name="loop_through" type="bool"   value="True" />
+  </node>
+
+</launch>

@@ -1,0 +1,21 @@
+base_global_planner: "global_planner/GlobalPlanner"   # or "navfn/NavfnROS"
+planner_patience: 3.0
+
+GlobalPlanner:
+  allow_unknown: true       # if your static map has unknowns in corridors, set true
+  use_dijkstra: true
+  use_quadratic: true
+  use_grid_path: false
+  old_navfn_behavior: false
+  cost_factor: 0.55
+  neutral_cost: 50
+  lethal_cost: 253
+
+# You can omit the local planner entirely if you’re not moving a robot
+base_local_planner: "base_local_planner/TrajectoryPlannerROS"
+TrajectoryPlannerROS:
+  max_vel_x: 0.3
+  min_vel_x: 0.0
+  max_rotational_vel: 0.5
+  acc_lim_x: 1.0
+  acc_lim_theta: 1.0

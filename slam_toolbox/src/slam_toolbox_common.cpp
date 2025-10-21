@@ -82,11 +82,20 @@ SlamToolbox::~SlamToolbox()
       serialization::write(filename, *smapper_->getMapper(), *dataset_);
     }
     std::ofstream myfile(filename + "_AllFrameTrajectory.txt");
+    printf("Start saving all frame poses ... ");
     myfile << StampedPose::header() << "\n";
     for (const auto& p : tracking_poses_) {
         myfile << p << "\n";
     }
     myfile.close();
+    printf("Done!\n");
+    myfile.open(filename + "_AllFrameTrajectoryCovariance.txt");
+    printf("Start saving all frame poses covariance ... ");
+    for (const auto& p : tracking_poses_) {
+        myfile << p.cov.ToString() << "\n";
+    }
+    myfile.close();
+    printf("Done!\n");
   }
 
   for (int i=0; i != threads_.size(); i++)
@@ -617,7 +626,7 @@ void SlamToolbox::publishPose(
 
   pose_pub_.publish(pose_msg);
 
-  tracking_poses_.emplace_back(StampedPose(pose_msg));
+  tracking_poses_.emplace_back(StampedPose(t.toSec(), pose, cov));
 
   if (p_pub_odometry_)
   {

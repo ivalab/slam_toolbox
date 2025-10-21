@@ -153,17 +153,19 @@ protected:
   bool save_map_;
   struct StampedPose {
       double timestamp, tx, ty, tz, qx, qy, qz, qw;
+      karto::Matrix3 cov;
 
-      StampedPose(const geometry_msgs::PoseWithCovarianceStamped& m)
+      StampedPose(double _timestamp, const karto::Pose2& pose,
+                  const karto::Matrix3& _cov)
+          : timestamp(_timestamp), cov(_cov)
       {
-          timestamp = m.header.stamp.toSec();
-          tx        = m.pose.pose.position.x;
-          ty        = m.pose.pose.position.y;
-          tz        = m.pose.pose.position.z;
-          qx        = m.pose.pose.orientation.x;
-          qy        = m.pose.pose.orientation.y;
-          qz        = m.pose.pose.orientation.z;
-          qw        = m.pose.pose.orientation.w;
+          tx        = pose.GetX();
+          ty        = pose.GetY();
+          tz        = 0.0;
+          qx        = 0.0;
+          qy        = 0.0;
+          qz        = std::sin(pose.GetHeading() / 2.0);
+          qw        = std::cos(pose.GetHeading() / 2.0);
       }
 
       friend std::ostream& operator<<(std::ostream& os, const StampedPose& s) {

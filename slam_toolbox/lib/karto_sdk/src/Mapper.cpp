@@ -1455,7 +1455,7 @@ namespace karto
   
   void MapperGraph::SavePosesAsTxt(const std::string& filename)
   {
-    printf("start saving keyframe poses ... ");
+    printf("Start saving keyframe poses ... ");
     for (const auto& vertices : GetVertices())
     {
       std::ofstream myfile(filename + "_" + vertices.first.GetName() + "_poses_2D.txt");
