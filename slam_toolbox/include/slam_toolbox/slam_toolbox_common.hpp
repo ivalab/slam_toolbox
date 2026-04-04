@@ -44,6 +44,7 @@
 #include <cstdlib>
 #include <fstream>
 #include <boost/thread.hpp>
+#include <boost/filesystem.hpp>
 #include <sys/resource.h>
 
 namespace slam_toolbox
@@ -98,6 +99,7 @@ protected:
   bool isPaused(const PausedApplication& app);
   bool pauseNewMeasurementsCallback(slam_toolbox_msgs::Pause::Request& req,
     slam_toolbox_msgs::Pause::Response& resp);
+  std::string getCurrentTimeAsDirectoryString() const;
 
   // ROS-y-ness
   ros::NodeHandle nh_;
