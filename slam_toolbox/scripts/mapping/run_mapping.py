@@ -15,7 +15,8 @@ from pathlib import Path
 import os
 import time
 
-DATA_ROOT = "/mnt/IVALAB/rosbags/tsrb/GW_CL_SEQS"
+# DATA_ROOT = "/mnt/IVALAB/rosbags/tsrb/GW_CL_SEQS"
+DATA_ROOT = "/home/roboslam/slam_ws/data/rosbags/"
 # RESULT_ROOT = DATA_ROOT
 RESULT_ROOT = "/tmp"
 SEQUENCES = [
@@ -30,13 +31,15 @@ SEQUENCES = [
     # "cl_path/path1",
     # "20250912_1",
     # "20250912_2",
-    "20250912_3",
+#    "20250912_3",
     # "cl_path/path3",
+    "tmp_seq"
 ]
 
 ROUND = 1
 SPEED = 0.5
 SAVE_OCC_MAP = True
+FIT_POSE = True
 
 DEPRECATED_TOPICS = [
     "/map",
@@ -74,16 +77,18 @@ for seq_index, seq_dir in enumerate(SEQUENCES):
     bagfiles = sorted(glob.glob(os.path.join(DATA_ROOT, seq_dir, "*.bag")))
     # print(bagfiles)
     bagstr = " ".join(bagfiles)
-    cmd_bag = f"rosbag play {bagstr} -r {SPEED} {remap_topics(DEPRECATED_TOPICS)}"  # -u 735
+    cmd_bag = f"rosbag play {bagstr} -r {SPEED} {remap_topics(DEPRECATED_TOPICS)} "   # -u 735
     print(cmd_bag)
     subprocess.call(cmd_bag, shell=True)
     time.sleep(1)
 
     # Save SLAM OccMap.
     if SAVE_OCC_MAP:
+        print("Saving map ...")
         map_name = f"{output_dir}/map"  # DIR/name
         map_msg = f"name: {{data: {map_name}}}"
-        cmd_save = f"rosservice call /slam_toolbox/save_map '{map_msg}'"
+#        cmd_save = f"rosservice call /slam_toolbox/save_map '{map_msg}'"
+        cmd_save = f"rosrun map_server map_saver -f {map_name}"
         subprocess.call(cmd_save, shell=True)
         time.sleep(2)
 
@@ -92,6 +97,15 @@ for seq_index, seq_dir in enumerate(SEQUENCES):
         cmd_kill = f"rosnode kill {node}"
         subprocess.call(cmd_kill, shell=True)
         time.sleep(2)
-    time.sleep(5)
+    time.sleep(1)
+
+    # Spline fitting pose
+    if FIT_POSE:
+        print("Run spline fitting ... ")
+        cmd_fit = f"rosrun slam_toolbox spline_fitting_node -d {RESULT_ROOT} -s {seq_dir}"
+        subprocess.call(cmd_fit, shell=True)
+        time.sleep(1)
+    print(f"Finished seq {seq_dir}.")
+    time.sleep(3)
 
     # break

@@ -191,11 +191,14 @@ void SlamToolbox::setParams(ros::NodeHandle& private_nh)
   private_nh.param("pub_odometry", p_pub_odometry_, false);
   private_nh.param("invert_tf", p_invert_tf_, false);
   private_nh.param("output_dir", output_dir_, std::string("/tmp"));
+  bool add_date_dir = true;
+  private_nh.param("add_date_dir", add_date_dir, true);
   // create dir
+  if (add_date_dir)
   {
       output_dir_ += this->getCurrentTimeAsDirectoryString();
-      boost::filesystem::create_directory(boost::filesystem::path(output_dir_));
   }
+boost::filesystem::create_directory(boost::filesystem::path(output_dir_));
   private_nh.param("save_map", save_map_, false);
 }
 

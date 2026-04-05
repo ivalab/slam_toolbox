@@ -251,7 +251,7 @@ class ExtractionNode(object):
         filtered_csv = output_dir + '/tag_filtered.csv'
         inspections_xytheta = output_dir + '/waypoints.txt'
         inspections_tum = output_dir + '/goals.txt'
-        np.savetxt(output_dir + '/path.txt', np.arange(len(matched)).reshape(-1, 1), fmt="%.1f")
+        np.savetxt(output_dir + '/path.txt', np.arange(len(matched)).reshape(-1, 1), fmt="%d")
 
         # save raw detections
         with open(detections_csv, 'w', newline='') as f:
@@ -275,12 +275,12 @@ class ExtractionNode(object):
 
         # save inspections
         with open(inspections_xytheta, 'w') as f_xy, open(inspections_tum, 'w') as f_tum:
-            for m in matched:
+            for midx, m in enumerate(matched):
                 ts = m['keyframe']['ts']
                 x = m['x']
                 y = m['y']
                 theta = m['theta']
-                f_xy.write(f"{x} {y} {theta}\n")
+                f_xy.write(f"{midx} {x} {y} {theta}\n")
                 # TUM line
                 kf = m['keyframe']
                 f_tum.write(f"{ts:.6f} {kf['tx']} {kf['ty']} {kf['tz']} {kf['qx']} {kf['qy']} {kf['qz']} {kf['qw']}\n")
@@ -371,6 +371,8 @@ class ExtractionNode(object):
         ax.scatter(kx, ky, s=10, c='gray')
         if ix:
             ax.scatter(ix, iy, s=50, c='red', marker='x', label='inspection points')
+            for idx, xx, yy in zip(range(len(ix)), ix, iy):
+                ax.text(xx, yy, str(idx), fontsize=12, va='top', color='green')
         ax.set_aspect('equal', adjustable='box')
         ax.set_xlabel('x')
         ax.set_ylabel('y')

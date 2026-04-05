@@ -43,7 +43,7 @@ find_package(rostest REQUIRED)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 add_definitions(-DQT_NO_KEYWORDS)
-find_package(Boost REQUIRED system serialization filesystem thread)
+find_package(Boost REQUIRED system serialization filesystem thread program_options)
 
 include_directories(include ${catkin_INCLUDE_DIRS} 
                             ${EIGEN3_INCLUDE_DIRS} 
@@ -122,6 +122,10 @@ target_link_libraries(lifelong_slam_toolbox_node lifelong_slam_toolbox)
 add_executable(merge_maps_kinematic src/merge_maps_kinematic.cpp)
 target_link_libraries(merge_maps_kinematic toolbox_common)
 
+#### Spline fitting
+add_executable(spline_fitting_node src/spline/spline_fitting_node.cpp src/spline/BSplineSE3.cpp)
+target_link_libraries(spline_fitting_node ${Boost_LIBRARIES})
+
 #### testing
 #if(CATKIN_ENABLE_TESTING)
 #  include_directories(test)
@@ -141,6 +145,7 @@ install(TARGETS toolbox_common
                 lifelong_slam_toolbox_node
                 ceres_solver_plugin
                 merge_maps_kinematic
+                spline_fitting_node
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
